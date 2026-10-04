@@ -737,7 +737,7 @@ function vDebts() {
     '<div class="card-head"><h3>My Debts (' + state.debts.length + '/' + MAX_DEBTS + ')</h3></div>' +
     (cards || '<p class="dim">No debts yet. Add your first one below.</p>') +
     '<button class="btn primary block" id="add-debt">+ Add debt</button>' +
-    '<p class="hint">List every debt: nickname, balance, APR, minimum payment. The light fields are yours to edit.</p></section>';
+    '<p class="hint">List every debt: nickname, balance, APR, minimum payment. Type in the boxes \u2014 everything else calculates itself.</p></section>';
 }
 
 function debtFormHtml(d, idx) {
@@ -843,7 +843,7 @@ function vStart() {
     '<li><strong>Tell it about your paychecks</strong> on the Paychecks tab: your default extra payment, plus a different number for overtime or slow months.</li>' +
     '<li><strong>Follow the plan</strong> on the Dashboard, Avalanche, or Snowball tab \u2014 it tells you exactly what to pay each debt, every month.</li>' +
     '</ol>' +
-    '<p class="hint">The light fields are yours to edit. Everything else calculates itself.</p></section>' +
+    '<p class="hint">Type in the boxes \u2014 everything else calculates itself.</p></section>' +
     '<section class="card"><div class="kicker">Questions</div>' + faqs + '</section>' +
     '<section class="card">' + kh('Your data', 'It lives on this device \u2014 back it up any time.') +
     '<div class="btn-row"><button class="btn ghost" id="export-backup">Export backup</button>' +
