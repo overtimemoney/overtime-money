@@ -413,6 +413,30 @@ input::placeholder { color: var(--muted); opacity: 0.8; }
 }
 .toast.show { transform: translate(-50%, 0); opacity: 1; }
 
+/* dashboard grid wrapper — invisible on mobile, 2-column on desktop */
+.dash-grid { display: contents; }
+
+@media (min-width: 900px) {
+  body {
+    background:
+      radial-gradient(640px 420px at 12% 8%, rgba(124, 107, 196, 0.14), transparent 62%),
+      radial-gradient(720px 480px at 88% 16%, rgba(240, 102, 140, 0.10), transparent 62%),
+      radial-gradient(800px 600px at 50% 110%, rgba(124, 107, 196, 0.08), transparent 60%),
+      var(--bg-grad);
+  }
+  #app-root { max-width: 1060px; }
+  #view { padding: 22px 30px 36px; }
+  /* non-dashboard views stay comfortably narrow */
+  #view > section.card { width: 100%; max-width: 700px; margin-inline: auto; }
+  .dash-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start;
+  }
+  .dash-grid > * { min-width: 0; }
+  .dash-grid > .onething,
+  .dash-grid > .showdown,
+  .dash-grid > .victories { grid-column: 1 / -1; }
+}
+
 /* debts — ledger rows with pastel identity dots */
 .debt-card {
   display: flex; align-items: center; gap: 14px;

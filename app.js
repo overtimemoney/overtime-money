@@ -684,7 +684,7 @@ function vDashboard() {
     '</section>';
   }
 
-  return oneThing +
+  return '<div class="dash-grid">' + oneThing +
   '<section class="card herowash">' +
     kh('Remaining debt', 'Your projected balance \u2014 toggle strategies to compare.') +
     '<div class="hero-total">' + money(remainingBefore) + '</div>' +
@@ -711,7 +711,7 @@ function vDashboard() {
     '</div>' +
     '<div id="whatif-result">' + whatIfResultHtml(r) + '</div>' +
   '</section>' +
-  '<section class="card">' +
+  '<section class="card showdown">' +
     '<div class="kicker">Strategy showdown</div>' +
     '<h3>Avalanche vs Snowball</h3>' +
     '<div class="compare">' +
@@ -723,7 +723,7 @@ function vDashboard() {
     '<button class="btn ghost" id="switch-strategy">Switch to the ' +
       (state.strategy === 'avalanche' ? 'Snowball' : 'Avalanche') + ' plan</button>' +
   '</section>' +
-  victoryLogHtml();
+  victoryLogHtml() + '</div>';
 }
 
 function victoryLogHtml() {
