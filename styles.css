@@ -324,6 +324,7 @@ html[data-theme="dark"] .theme-toggle .ico-moon { display: none; }
 .compare em { font-style: normal; font-size: 13px; color: var(--muted); }
 .compare-note { font-size: 15px; margin: 12px 0 14px; }
 .compare-note .serif-money { font-size: 17px; }
+#switch-strategy { display: block; margin: 4px auto 2px; }
 
 /* buttons */
 .btn {
