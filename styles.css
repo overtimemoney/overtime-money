@@ -366,6 +366,30 @@ input::placeholder { color: var(--muted); opacity: 0.8; }
 .whatif-sub { color: var(--muted); margin: 0 0 2px; font-size: 0.98rem; }
 .whatif-hint { margin: 10px 0 2px; }
 
+/* victory log — quiet history of killed debts */
+.win-row { display: flex; align-items: center; gap: 12px; padding: 11px 2px; border-bottom: 1px solid var(--line); }
+.win-row:last-child { border-bottom: none; }
+.win-main strong { font-family: 'Newsreader', Georgia, serif; font-size: 1.04rem; font-weight: 600; display: block; }
+.win-sub { color: var(--muted); font-size: 0.88rem; }
+
+/* payoff celebration — full-screen moment in the debt's own color */
+.cel-root { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.cel-backdrop { position: absolute; inset: 0; background: var(--modal-backdrop); }
+.cel-card {
+  position: relative; width: 100%; max-width: 420px; border-radius: 28px; padding: 38px 28px 28px; text-align: center;
+  background: radial-gradient(130% 90% at 50% 0%, var(--dc-tint) 0%, var(--card) 72%);
+  border: 1px solid var(--card-border); box-shadow: var(--card-shadow);
+}
+.cel-check {
+  width: 66px; height: 66px; margin: 16px auto; border-radius: 50%;
+  background: var(--dc); color: #fff; font-size: 30px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+}
+.cel-name { font-family: 'Newsreader', Georgia, serif; font-size: 1.75rem; font-weight: 600; line-height: 1.2; }
+.cel-sub { color: var(--muted); margin: 10px 0 4px; font-size: 0.98rem; }
+.cel-you { font-family: 'Newsreader', Georgia, serif; font-size: 1.3rem; margin: 16px 0 20px; }
+
 /* debts — ledger rows with pastel identity dots */
 .debt-card {
   display: flex; align-items: center; gap: 14px;

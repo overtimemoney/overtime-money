@@ -301,14 +301,14 @@ var TABS = [
 
 /* ---------------- state ---------------- */
 function blankState() {
-  return { debts: [], defaultExtra: '', overrides: {}, strategy: 'avalanche', currentMonth: 1 };
+  return { debts: [], defaultExtra: '', overrides: {}, strategy: 'avalanche', currentMonth: 1, victories: [] };
 }
 function sampleState() {
   return {
     debts: JSON.parse(JSON.stringify(SAMPLE.debts)),
     defaultExtra: SAMPLE.defaultExtra,
     overrides: { 1: 450, 2: 100, 3: 300 },
-    strategy: 'avalanche', currentMonth: 1
+    strategy: 'avalanche', currentMonth: 1, victories: []
   };
 }
 function normalize(s) {
@@ -320,6 +320,7 @@ function normalize(s) {
   s.strategy = (s.strategy === 'snowball') ? 'snowball' : 'avalanche';
   s.currentMonth = Math.max(1, parseInt(s.currentMonth, 10) || 1);
   s.overrides = s.overrides || {};
+  s.victories = Array.isArray(s.victories) ? s.victories.filter(function (v) { return v && v.name; }) : [];
   return s;
 }
 function save() {
@@ -483,6 +484,65 @@ function whatIfResultHtml(r) {
   return '<p class="whatif-line">Debt-free by <strong>' + esc(w.debtFreeLabel || '10+ years') + '</strong></p>' +
     '<p class="whatif-sub">' + soonerTxt + money(interestSaved) + ' less interest</p>';
 }
+function interestDodged(name) {
+  var di = debtIdxByName(name);
+  if (di < 0) return 0;
+  var d = state.debts[di], r = primary(), paid = 0;
+  r.schedule.forEach(function (m) {
+    m.payments.forEach(function (p) { if (p.idx === di) paid += (p.minPaid || 0) + (p.extraPaid || 0); });
+  });
+  var actualInterest = Math.max(0, paid - d.balance);
+  var solo = window.OvertimeEngine.simulate(
+    [{ name: d.name, balance: d.balance, apr: d.apr, minPay: d.minPay }], 0, {});
+  return Math.max(0, solo.avalanche.totalInterest - actualInterest);
+}
+/* Log every payoff at/below the current month; return the ones from THIS month for celebration. */
+function logPayoffs() {
+  var r = primary(), cm = state.currentMonth, fresh = [];
+  if (!Array.isArray(state.victories)) state.victories = [];
+  r.perDebt.forEach(function (pd) {
+    if (pd.payoffMonth != null && pd.payoffMonth <= cm) {
+      var key = pd.name + '|' + pd.payoffLabel;
+      var dup = state.victories.some(function (v) { return v.key === key; });
+      if (!dup) {
+        var di = debtIdxByName(pd.name);
+        var v = { key: key, name: pd.name, label: pd.payoffLabel || '',
+                  color: di >= 0 ? debtColorClass(di) : 'dc0',
+                  dodged: Math.round(interestDodged(pd.name) * 100) / 100 };
+        state.victories.push(v);
+        if (pd.payoffMonth === cm) fresh.push(v);
+      }
+    }
+  });
+  return fresh;
+}
+function showCelebration(wins) {
+  closeCelebration();
+  var v = wins[0];
+  var others = wins.length > 1
+    ? '<p class="cel-sub">Also this month: ' + esc(wins.slice(1).map(function (w) { return w.name; }).join(', ')) + '.</p>' : '';
+  var root = document.createElement('div');
+  root.className = 'cel-root';
+  root.innerHTML =
+    '<div class="cel-backdrop"></div>' +
+    '<div class="cel-card ' + v.color + '" role="dialog" aria-label="Debt paid off">' +
+      '<div class="kicker">Debt paid off</div>' +
+      '<div class="cel-check">\u2713</div>' +
+      '<div class="cel-name">' + esc(v.name) + '</div>' +
+      '<p class="cel-sub">' + esc(v.label) + ' \u00B7 ' + money(v.dodged) + ' interest dodged vs. minimums</p>' +
+      others +
+      '<p class="cel-you">You did this.</p>' +
+      '<button class="btn primary block" id="cel-ok">Keep going</button>' +
+    '</div>';
+  root.querySelector('.cel-backdrop').addEventListener('click', closeCelebration);
+  root.querySelector('#cel-ok').addEventListener('click', closeCelebration);
+  document.body.appendChild(root);
+  var b = root.querySelector('#cel-ok'); if (b) b.focus();
+}
+function closeCelebration() {
+  var r = document.querySelector('.cel-root');
+  if (r) r.parentNode.removeChild(r);
+}
 function vDashboard() {
   var s = sim();
   if (!state.debts.length) return emptyDebtsHtml('Add your debts to see your payoff plan.');
@@ -568,6 +628,21 @@ function vDashboard() {
     '</strong> in interest \u00B7 <strong>' + esc(fasterTxt) + '</strong></p>' +
     '<button class="btn ghost" id="switch-strategy">Follow the ' +
       (state.strategy === 'avalanche' ? 'snowball' : 'avalanche') + ' plan instead</button>' +
+  '</section>' +
+  victoryLogHtml();
+}
+
+function victoryLogHtml() {
+  var wins = state.victories || [];
+  if (!wins.length) return '';
+  return '<section class="card victories">' +
+    '<div class="kicker">Victory log</div>' +
+    '<h3>Debts you\u2019ve killed</h3>' +
+    wins.map(function (v) {
+      return '<div class="win-row"><span class="debt-dot ' + (v.color || 'dc0') + '"></span>' +
+        '<div class="win-main"><strong>' + esc(v.name) + '</strong>' +
+        '<span class="win-sub">Paid off ' + esc(v.label || '') + ' \u00B7 ' + money(v.dodged || 0) + ' interest dodged</span></div></div>';
+    }).join('') +
   '</section>';
 }
 
@@ -745,7 +820,10 @@ function wire(el) {
   });
   if (fwd) fwd.addEventListener('click', function () {
     var r = primary(), maxM = r.debtFreeMonth || r.schedule.length;
-    state.currentMonth = Math.min(maxM, state.currentMonth + 1); save(); render();
+    state.currentMonth = Math.min(maxM, state.currentMonth + 1);
+    var fresh = logPayoffs();
+    save(); render();
+    if (fresh.length) showCelebration(fresh);
   });
   /* debts */
   var add = $('#add-debt', el);
