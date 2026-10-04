@@ -27,7 +27,7 @@
 (function (root) {
 'use strict';
 
-var MAX_MONTHS = 120;
+var MAX_MONTHS = 360;
 var MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun',
                    'Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -169,7 +169,7 @@ function runStrategy(debts, defaultExtra, overrides, strategy, start) {
   });
 
   return {
-    months: debtFreeMonth,              /* null => beyond 10 years */
+    months: debtFreeMonth,              /* null => beyond 30 years (or never, if minimums don't cover interest) */
     debtFreeMonth: debtFreeMonth,
     debtFreeLabel: debtFreeMonth ? monthLabel(start, debtFreeMonth) : null,
     totalInterest: totalInterest,
@@ -410,7 +410,7 @@ function footerHtml() {
   var s = sim();
   var av = s.avalanche, sn = s.snowball;
   var saved = Math.max(0, sn.totalInterest - av.totalInterest);
-  var df = av.debtFreeLabel || '10+ yrs';
+  var df = av.debtFreeLabel || '30+ yrs';
   return '<strong>' + esc(df) + '</strong> \u00B7 debt-free \u00B7 <strong>' + money(saved) +
     '</strong> saved with avalanche <span class="dim">\u00B7 on this device</span>';
 }
@@ -486,11 +486,11 @@ function buildExport() {
   var s = sim(), cm = state.currentMonth, sched = s.avalanche.schedule;
   function summ(r) {
     return {
-      debtFree: r.debtFreeLabel || 'Beyond 10 years',
+      debtFree: r.debtFreeLabel || 'Beyond 30 years',
       monthsToDebtFree: r.months,
       totalInterest: r2(r.totalInterest),
       totalPaid: r2(r.totalPaid),
-      perDebt: r.perDebt.map(function (p) { return { name: p.name, paidOff: p.payoffLabel || 'Beyond 10 years' }; })
+      perDebt: r.perDebt.map(function (p) { return { name: p.name, paidOff: p.payoffLabel || 'Beyond 30 years' }; })
     };
   }
   return {
@@ -559,7 +559,7 @@ function whatIfResultHtml(r) {
   var interestSaved = Math.max(0, r.totalInterest - w.totalInterest);
   var soonerTxt = (monthsSooner != null && monthsSooner > 0)
     ? '<strong>' + monthsSooner + (monthsSooner === 1 ? ' month sooner' : ' months sooner') + '</strong> \u00B7 ' : '';
-  return '<p class="whatif-line">Debt-free by <strong>' + esc(w.debtFreeLabel || '10+ years') + '</strong></p>' +
+  return '<p class="whatif-line">Debt-free by <strong>' + esc(w.debtFreeLabel || '30+ years') + '</strong></p>' +
     '<p class="whatif-sub">' + soonerTxt + money(interestSaved) + ' less interest</p>';
 }
 function interestDodged(name) {
@@ -641,7 +641,7 @@ function vDashboard() {
     : monthsFaster > 0 ? monthsFaster + (monthsFaster === 1 ? ' month faster' : ' months faster')
     : monthsFaster === 0 ? 'same timeline' : 'snowball is faster here';
 
-  var dfLabel = r.debtFreeLabel || 'Beyond 10 years';
+  var dfLabel = r.debtFreeLabel || 'Beyond 30 years';
   var maxM = r.debtFreeMonth || r.schedule.length;
 
   var oneThing;
@@ -699,8 +699,8 @@ function vDashboard() {
     '<div class="kicker">Strategy showdown</div>' +
     '<h3>Avalanche vs Snowball</h3>' +
     '<div class="compare">' +
-      '<div><span>Avalanche</span><strong>' + money(av.totalInterest) + '</strong><em>' + esc(av.debtFreeLabel || '10+ yrs') + '</em></div>' +
-      '<div><span>Snowball</span><strong>' + money(sn.totalInterest) + '</strong><em>' + esc(sn.debtFreeLabel || '10+ yrs') + '</em></div>' +
+      '<div><span>Avalanche</span><strong>' + money(av.totalInterest) + '</strong><em>' + esc(av.debtFreeLabel || '30+ yrs') + '</em></div>' +
+      '<div><span>Snowball</span><strong>' + money(sn.totalInterest) + '</strong><em>' + esc(sn.debtFreeLabel || '30+ yrs') + '</em></div>' +
     '</div>' +
     '<p class="compare-note">Avalanche saves <strong class="coral">' + money(Math.max(0, saved)) +
     '</strong> in interest \u00B7 <strong>' + esc(fasterTxt) + '</strong></p>' +
@@ -803,7 +803,7 @@ function vSchedule(strategy) {
     return '<div class="chip ' + cls + '">' +
       (cls ? '<span class="debt-dot ' + cls + '"></span>' : '') +
       '<strong>' + esc(p.name) + '</strong><span>' +
-      (p.payoffLabel ? 'debt-free ' + esc(p.payoffLabel) : 'beyond 10 years') + '</span></div>';
+      (p.payoffLabel ? 'debt-free ' + esc(p.payoffLabel) : 'beyond 30 years') + '</span></div>';
   }).join('');
 
   var months = r.schedule.map(function (sc, i) {
@@ -828,7 +828,7 @@ function vSchedule(strategy) {
     ? kh('Snowball plan', 'Smallest balance first. Quick wins that build momentum.')
     : kh('Avalanche plan', 'Highest APR first. Mathematically the cheapest way out.');
   return '<section class="card">' + kick + '<h3>' + title + '</h3><p class="dim">' + sub + ' \u00B7 ' +
-    (r.debtFreeLabel ? 'debt-free ' + esc(r.debtFreeLabel) : 'beyond 10 years') + ' \u00B7 ' +
+    (r.debtFreeLabel ? 'debt-free ' + esc(r.debtFreeLabel) : 'beyond 30 years') + ' \u00B7 ' +
     money(r.totalInterest) + ' total interest</p><div class="chips">' + chips + '</div></section>' +
     '<section class="card"><div class="kicker">Month by month</div>' + months + '</section>';
 }
