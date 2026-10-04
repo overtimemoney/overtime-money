@@ -277,7 +277,15 @@ var FAQS = [
   ['Does it connect to my bank?',
    'No \u2014 and that\u2019s on purpose. No logins, no account aggregation, no bank credentials anywhere near this tool. You type four numbers per debt; it does the math.'],
   ['Is my data sent anywhere, ever?',
-   'No. The only way data leaves this browser is if YOU tap \u201cExport backup,\u201d which downloads a file you control. Importing reads a file you choose. Nothing else transmits anything.']
+   'No. The only way data leaves this browser is if YOU tap \u201cExport backup,\u201d which downloads a file you control. Importing reads a file you choose. Nothing else transmits anything.'],
+  ['Why does my iPhone say \u201cDelete Bookmark\u201d instead of \u201cDelete App\u201d?',
+   'That\u2019s just Apple\u2019s wording. You installed Overtime Money from Safari\u2019s \u201cAdd to Home Screen,\u201d so iOS files it as a bookmark \u2014 but it\u2019s the complete app, working offline, not a shortcut to something lesser. Nothing is wrong.'],
+  ['It warns \u201cyour data will be lost\u201d \u2014 is that real?',
+   'Yes \u2014 take the warning seriously. Your entire plan lives only in this app\u2019s private storage on this phone. There\u2019s no account and no cloud copy, so deleting the icon deletes your data with it. Re-adding the app later starts you from a blank slate \u2014 unless you exported a backup first (see below).'],
+  ['How do I back up my plan?',
+   'On the Start Here tab, tap \u201cExport backup.\u201d It downloads a single file containing everything \u2014 debts, paychecks, progress, victories. Save it somewhere safe (Files app, email it to yourself). On any fresh install, \u201cImport backup\u201d restores it all. Back up before deleting the app, before switching phones, or about once a month for peace of mind.'],
+  ['I got a new phone. How do I move my plan over?',
+   'On your old phone: Start Here \u2192 Export backup, then send that file to yourself (email, AirDrop, a cloud drive). On your new phone: open your private app link, go to Start Here \u2192 Import backup, and choose the file. Everything \u2014 debts, paycheck overrides, progress, victory log \u2014 carries over.']
 ];
 
 var SVG_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">';
