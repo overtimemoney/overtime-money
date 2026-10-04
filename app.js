@@ -64,9 +64,15 @@ function emptyResult(initialTotal) {
   };
 }
 
-/* RANK() semantics: 1 + number of strictly-better values (ties share a rank). */
+/* RANK() semantics: 1 + number of strictly-better values (ties share a rank).
+ * avalanche: highest APR first. snowball: smallest balance first.
+ * custom: lowest user-assigned order first. */
 function computeRanks(debts, strategy) {
-  var vals = debts.map(function (d) { return strategy === 'avalanche' ? d.apr : d.balance; });
+  var vals = debts.map(function (d) {
+    if (strategy === 'avalanche') return d.apr;
+    if (strategy === 'custom') return d.order;
+    return d.balance;
+  });
   return vals.map(function (v, i) {
     var r = 1;
     for (var j = 0; j < vals.length; j++) {
@@ -186,7 +192,7 @@ function runStrategy(debts, defaultExtra, overrides, strategy, start) {
   };
 }
 
-/* debts: [{name, balance, apr (annual %), minPay}]
+/* debts: [{name, balance, apr (annual %), minPay, order (1 = pay first, custom only)}]
    overrides: {1: n, ..., 12: n}; blank/missing -> defaultExtra. Months 13+ -> default.
    today: Date (default now); start date = first day of next month.            */
 function simulate(debts, defaultExtra, overrides, today) {
@@ -199,7 +205,8 @@ function simulate(debts, defaultExtra, overrides, today) {
         name: String(dd.name || ('Debt ' + (i + 1))),
         balance: balance,
         apr: toNum(dd.apr),
-        minPay: Math.max(0, toNum(dd.minPay))
+        minPay: Math.max(0, toNum(dd.minPay)),
+        order: (isFinite(+dd.order) && +dd.order > 0) ? Math.floor(+dd.order) : (i + 1)
       });
     }
   });
@@ -207,11 +214,12 @@ function simulate(debts, defaultExtra, overrides, today) {
   var start = firstOfNextMonth(t);
   if (!clean.length) {
     var e = emptyResult(0);
-    return { avalanche: e, snowball: e, start: start };
+    return { avalanche: e, snowball: e, custom: e, start: start };
   }
   return {
     avalanche: runStrategy(clean, defaultExtra, overrides, 'avalanche', start),
     snowball: runStrategy(clean, defaultExtra, overrides, 'snowball', start),
+    custom: runStrategy(clean, defaultExtra, overrides, 'custom', start),
     start: start
   };
 }
@@ -271,7 +279,7 @@ var FAQS = [
   ['Is my data private?',
    'Yes. Everything you enter is stored only in this browser on this device (localStorage). Nothing is uploaded, synced, or sent anywhere. There is no account and no server.'],
   ['Which strategy should I follow?',
-   'Pick one and stick with it. Avalanche (highest APR first) usually saves the most interest; Snowball (smallest balance first) gives faster early wins. The Dashboard shows both side by side so you can decide with your own numbers, and the Plan tab follows whichever you pick.'],
+   'Pick one and stick with it. Avalanche (highest APR first) usually saves the most interest; Snowball (smallest balance first) gives faster early wins. Or pick Custom and rank the debts yourself on the Debts tab \u2014 the Plan tab follows your order. The Dashboard shows Avalanche vs Snowball side by side so you can decide with your own numbers.'],
   ['How is this different from free calculators?',
    'Free calculators assume one fixed extra payment forever and hand you a date. This is a living, month-by-month plan: variable extra payments for irregular income, both strategies compared, and a concrete \u201cput $X toward Y\u201d instruction for every single month.'],
   ['What does \u201cfirepower\u201d mean?',
@@ -321,23 +329,33 @@ var TABS = [
 
 /* ---------------- state ---------------- */
 function blankState() {
-  return { debts: [], defaultExtra: '', overrides: {}, strategy: 'avalanche', currentMonth: 1, victories: [] };
+  return { debts: [], defaultExtra: '', overrides: {}, strategy: 'avalanche', currentMonth: 1, victories: [], payments: [] };
 }
 function sampleState() {
   return {
     debts: JSON.parse(JSON.stringify(SAMPLE.debts)),
     defaultExtra: SAMPLE.defaultExtra,
     overrides: { 1: 450, 2: 100, 3: 300 },
-    strategy: 'avalanche', currentMonth: 1, victories: []
+    strategy: 'avalanche', currentMonth: 1, victories: [], payments: []
   };
 }
 function normalize(s) {
-  s.debts = (s.debts || []).filter(function (d) { return d && +d.balance > 0; }).slice(0, MAX_DEBTS);
-  s.debts.forEach(function (d) {
+  /* keep $0 debts: a logged final payment marks them paid off, they don't vanish */
+  s.debts = (s.debts || []).filter(function (d) { return d && isFinite(+d.balance) && +d.balance >= 0; }).slice(0, MAX_DEBTS);
+  s.debts.forEach(function (d, i) {
     d.name = String(d.name || 'Debt'); d.balance = +d.balance || 0;
     d.apr = Math.max(0, +d.apr || 0); d.minPay = Math.max(0, +d.minPay || 0);
+    d.order = (isFinite(+d.order) && +d.order > 0) ? Math.floor(+d.order) : (i + 1);
+    d.startBalance = (+d.startBalance > 0) ? +d.startBalance : d.balance;
+    d.notes = String(d.notes || '');
   });
-  s.strategy = (s.strategy === 'snowball') ? 'snowball' : 'avalanche';
+  s.strategy = (s.strategy === 'snowball' || s.strategy === 'custom') ? s.strategy : 'avalanche';
+  s.payments = Array.isArray(s.payments) ? s.payments.filter(function (p) {
+    return p && isFinite(+p.amount) && +p.amount > 0 && p.name;
+  }).map(function (p) {
+    return { debtIdx: (isFinite(+p.debtIdx) ? +p.debtIdx : -1), name: String(p.name),
+             amount: +p.amount, date: String(p.date || new Date().toISOString()) };
+  }) : [];
   s.currentMonth = Math.max(1, parseInt(s.currentMonth, 10) || 1);
   s.overrides = s.overrides || {};
   s.victories = Array.isArray(s.victories) ? s.victories.filter(function (v) { return v && v.name; }) : [];
@@ -361,7 +379,19 @@ var view = (state.debts && state.debts.length) ? 'dashboard' : 'start';
 var whatIf = 0; /* hypothetical extra $/mo — playground only, never saved to the plan */
 
 function sim() { return window.OvertimeEngine.simulate(state.debts, state.defaultExtra, state.overrides); }
-function primary() { var s = sim(); return state.strategy === 'snowball' ? s.snowball : s.avalanche; }
+function stratName(k) { return k === 'snowball' ? 'Snowball' : k === 'custom' ? 'Custom' : 'Avalanche'; }
+function stratSub(k) {
+  return k === 'snowball' ? 'Smallest balance first' :
+         k === 'custom' ? 'Your order, your call' : 'Highest APR first';
+}
+function stratResult(s, k) { return k === 'snowball' ? s.snowball : k === 'custom' ? s.custom : s.avalanche; }
+function primary() { return stratResult(sim(), state.strategy); }
+function segHtml() {
+  return '<div class="seg" role="tablist">' +
+    ['avalanche', 'snowball', 'custom'].map(function (k) {
+      return '<button class="' + (state.strategy === k ? 'on' : '') + '" data-strategy="' + k + '">' + stratName(k) + '</button>';
+    }).join('') + '</div>';
+}
 function extraFor(m) {
   var o = state.overrides;
   var has = o && m <= 12 && o[m] !== undefined && o[m] !== null && o[m] !== '';
@@ -520,7 +550,11 @@ function buildExport() {
       currentMonthLabel: ((sched[cm - 1] || {}).label || '')
     },
     debts: state.debts.map(function (d) {
-      return { name: d.name, balance: r2(d.balance), aprPercent: r2(d.apr), minimumPayment: r2(d.minPay) };
+      return { name: d.name, balance: r2(d.balance), aprPercent: r2(d.apr), minimumPayment: r2(d.minPay),
+               order: d.order, notes: d.notes || '', startBalance: r2(d.startBalance) };
+    }),
+    payments: (state.payments || []).map(function (p) {
+      return { name: p.name, amount: r2(p.amount), date: p.date };
     }),
     extraPayments: {
       defaultPerMonth: r2(parseFloat(cleanNumStr(state.defaultExtra)) || 0),
@@ -530,7 +564,7 @@ function buildExport() {
     victories: (state.victories || []).map(function (v) {
       return { name: v.name, paidOff: v.label || '', interestDodgedVsMinimums: r2(v.dodged || 0) };
     }),
-    planSummary: { avalanche: summ(s.avalanche), snowball: summ(s.snowball) }
+    planSummary: { avalanche: summ(s.avalanche), snowball: summ(s.snowball), custom: summ(s.custom) }
   };
 }
 
@@ -539,7 +573,8 @@ function stateFromBackup(o) {
   if (o.formatVersion === 2 && Array.isArray(o.debts)) {
     var xp = o.extraPayments || {};
     var debts = o.debts.map(function (d) {
-      return { name: String(d.name || 'Debt'), balance: +d.balance || 0, apr: +d.aprPercent || 0, minPay: +d.minimumPayment || 0 };
+      return { name: String(d.name || 'Debt'), balance: +d.balance || 0, apr: +d.aprPercent || 0, minPay: +d.minimumPayment || 0,
+               order: +d.order || 0, notes: String(d.notes || ''), startBalance: +d.startBalance || 0 };
     });
     return normalize({
       debts: debts,
@@ -547,6 +582,7 @@ function stateFromBackup(o) {
       overrides: xp.monthlyOverrides || {},
       strategy: o.strategy,
       currentMonth: (o.progress || {}).currentMonth,
+      payments: o.payments || [],
       victories: (o.victories || []).map(function (v) {
         var nm = String(v.name || 'Debt'), di = -1;
         for (var i = 0; i < debts.length; i++) if (debts[i].name === nm) { di = i; break; }
@@ -668,8 +704,13 @@ function vDashboard() {
   var saved = sn.totalInterest - av.totalInterest;
   var monthsFaster = (sn.months != null && av.months != null) ? (sn.months - av.months) : null;
   var fasterTxt = monthsFaster == null ? 'timeline varies'
-    : monthsFaster > 0 ? monthsFaster + (monthsFaster === 1 ? ' month faster' : ' months faster')
+    : monthsFaster > 0 ? 'avalanche ' + monthsFaster + (monthsFaster === 1 ? ' month faster' : ' months faster')
     : monthsFaster === 0 ? 'same timeline' : 'snowball is faster here';
+  /* showdown badges: fastest = earliest debt-free date, cheapest = least interest */
+  var avMonths = av.months == null ? Infinity : av.months;
+  var snMonths = sn.months == null ? Infinity : sn.months;
+  var avFastest = avMonths < snMonths, snFastest = snMonths < avMonths;
+  var avCheapest = av.totalInterest < sn.totalInterest, snCheapest = sn.totalInterest < av.totalInterest;
 
   var dfLabel = r.debtFreeLabel || 'Beyond 30 years';
   var maxM = r.debtFreeMonth || r.schedule.length;
@@ -680,8 +721,8 @@ function vDashboard() {
     '<section class="card onething">' +
       '<div class="kicker">Your next move</div>' +
       '<p class="onething-line">Put your ' + money(ex) + ' extra toward ' + esc(sched.extraTarget) + '.</p>' +
-      '<p class="onething-sub">Month ' + cm + ' \u00B7 ' + esc(sched.label) +
-        ' \u2014 press and hold: \u2713 advances when these are paid, \u2190 goes back.</p>' +
+      '<p class="onething-sub">Month ' + cm + ' \u00B7 ' + esc(sched.label) + ' \u2014 ' + esc(stratName(state.strategy)) +
+        ' plan \u00B7 press and hold: \u2713 advances when these are paid, \u2190 goes back.</p>' +
       '<div class="month-nav">' +
         '<button class="btn small onething-ghost holdbtn" id="m-back" ' + (cm <= 1 ? 'disabled' : '') + '>' +
           '<span class="hold-fill"></span><span class="hold-label">Hold \u2190 last\u00A0month</span></button>' +
@@ -704,10 +745,7 @@ function vDashboard() {
   '<section class="card herowash">' +
     kh('Remaining debt', 'Your projected balance \u2014 toggle strategies to compare.') +
     '<div class="hero-total">' + money(remainingBefore) + '</div>' +
-    '<div class="seg" role="tablist">' +
-      '<button class="' + (state.strategy === 'avalanche' ? 'on' : '') + '" data-strategy="avalanche">Avalanche</button>' +
-      '<button class="' + (state.strategy === 'snowball' ? 'on' : '') + '" data-strategy="snowball">Snowball</button>' +
-    '</div>' +
+    segHtml() +
     '<div class="donut-row">' + donut(pct) +
       '<div class="donut-side">' +
         '<div><span class="kpi-label">Debt-free</span><span class="kpi-value">' + esc(dfLabel) + '</span></div>' +
@@ -731,13 +769,12 @@ function vDashboard() {
     '<div class="kicker">Strategy showdown</div>' +
     '<h3>Avalanche vs Snowball</h3>' +
     '<div class="compare">' +
-      '<div><span>Avalanche</span><strong>' + money(av.totalInterest) + '</strong><em>' + esc(av.debtFreeLabel || '30+ yrs') + '</em></div>' +
-      '<div><span>Snowball</span><strong>' + money(sn.totalInterest) + '</strong><em>' + esc(sn.debtFreeLabel || '30+ yrs') + '</em></div>' +
+      '<div><span>Avalanche' + (avFastest ? ' <em class="badge">Fastest</em>' : '') + (avCheapest ? ' <em class="badge">Saves most</em>' : '') + '</span><strong>' + money(av.totalInterest) + '</strong><em>' + esc(av.debtFreeLabel || '30+ yrs') + '</em></div>' +
+      '<div><span>Snowball' + (snFastest ? ' <em class="badge">Fastest</em>' : '') + (snCheapest ? ' <em class="badge">Saves most</em>' : '') + '</span><strong>' + money(sn.totalInterest) + '</strong><em>' + esc(sn.debtFreeLabel || '30+ yrs') + '</em></div>' +
     '</div>' +
     '<p class="compare-note">Avalanche saves <strong class="coral">' + money(Math.max(0, saved)) +
     '</strong> in interest \u00B7 <strong>' + esc(fasterTxt) + '</strong></p>' +
-    '<button class="btn ghost" id="switch-strategy">Switch to the ' +
-      (state.strategy === 'avalanche' ? 'Snowball' : 'Avalanche') + ' plan</button>' +
+    '<p class="hint">On the Custom plan? Rank your debts on the Debts tab \u2014 the Plan tab follows your order.</p>' +
   '</section>' +
   victoryLogHtml() + '</div>';
 }
@@ -756,29 +793,71 @@ function victoryLogHtml() {
   '</section>';
 }
 
+function debtProgressHtml(d) {
+  var start = d.startBalance > 0 ? d.startBalance : d.balance;
+  var paid = Math.max(0, start - d.balance);
+  var pct = start > 0 ? Math.min(100, (paid / start) * 100) : 0;
+  if (d.balance <= 0)
+    return '<div class="debt-progress"><div class="progress"><div class="progress-fill" style="width:100%"></div></div>' +
+      '<div class="progress-label">Paid off \u2713 \u2014 ' + money(start) + ' cleared</div></div>';
+  return '<div class="debt-progress"><div class="progress"><div class="progress-fill" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+    '<div class="progress-label">' + money(paid) + ' of ' + money(start) + ' paid</div></div>';
+}
+
+function paymentLogHtml() {
+  var ps = (state.payments || []).map(function (p, i) { return { p: p, i: i }; })
+    .sort(function (a, b) { return a.p.date < b.p.date ? 1 : -1; });
+  if (!ps.length) return '';
+  var rows = ps.map(function (x) {
+    var p = x.p, dt = new Date(p.date);
+    var dlbl = isNaN(dt.getTime()) ? '' : dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    return '<div class="paylog-row"><div class="paylog-main"><strong>' + esc(p.name) + '</strong>' +
+      '<span class="paylog-sub">' + esc(dlbl) + (dlbl ? ' \u00B7 ' : '') + money(p.amount) + ' paid</span></div>' +
+      '<button class="btn small danger-ghost" data-delpay="' + x.i + '">Remove</button></div>';
+  }).join('');
+  return '<section class="card"><div class="kicker">Payment log</div><h3>What you\u2019ve actually paid</h3>' + rows +
+    '<p class="hint">Logging real payments keeps the plan honest \u2014 the balance drops and everything recalculates. Removing one puts the money back.</p></section>';
+}
+
 function vDebts() {
-  var cards = state.debts.map(function (d, i) {
+  var custom = state.strategy === 'custom';
+  var disp = state.debts.map(function (d, i) { return i; });
+  if (custom) disp.sort(function (a, b) { return state.debts[a].order - state.debts[b].order; });
+  var cards = disp.map(function (i) {
+    var d = state.debts[i];
+    var ordBtns = custom
+      ? '<button class="btn small ghost ord" data-up="' + i + '" aria-label="Move ' + esc(d.name) + ' earlier">\u2191</button>' +
+        '<button class="btn small ghost ord" data-down="' + i + '" aria-label="Move ' + esc(d.name) + ' later">\u2193</button>'
+      : '';
     return '<div class="debt-card"><span class="debt-dot ' + debtColorClass(i) + '"></span><div class="debt-main">' +
-      '<strong>' + esc(d.name) + '</strong>' +
+      '<strong>' + esc(d.name) + (custom ? ' <span class="ord-num">#' + d.order + '</span>' : '') + '</strong>' +
       '<span class="debt-nums">' + money(d.balance) + ' \u00B7 ' + (+d.apr).toFixed(2) + '% APR \u00B7 ' +
-      money(d.minPay) + '/mo min</span></div>' +
-      '<div class="debt-actions"><button class="btn small ghost" data-edit="' + i + '">Edit</button>' +
+      money(d.minPay) + '/mo min</span>' +
+      (d.notes ? '<span class="debt-notes">' + esc(d.notes) + '</span>' : '') +
+      debtProgressHtml(d) + '</div>' +
+      '<div class="debt-actions">' + ordBtns +
+      '<button class="btn small ghost" data-logpay="' + i + '">Log payment</button>' +
+      '<button class="btn small ghost" data-edit="' + i + '">Edit</button>' +
       '<button class="btn small danger-ghost" data-del="' + i + '">Delete</button></div></div>';
   }).join('');
   return '<section class="card">' + kh('Your debts', 'List what you owe. No judgment \u2014 this is the starting line, not a report card.') +
     '<div class="card-head"><h3>My Debts (' + state.debts.length + '/' + MAX_DEBTS + ')</h3></div>' +
+    (custom && state.debts.length > 1
+      ? '<p class="hint">Custom plan active \u2014 use \u2191 \u2193 to set the order your extra payments attack.</p>' : '') +
     (cards || '<p class="dim">No debts yet. Add your first one below.</p>') +
     '<button class="btn primary block" id="add-debt">+ Add debt</button>' +
-    '<p class="hint">List every debt: nickname, balance, APR, minimum payment. Type in the boxes \u2014 everything else calculates itself.</p></section>';
+    '<p class="hint">List every debt: nickname, balance, APR, minimum payment. Type in the boxes \u2014 everything else calculates itself.</p></section>' +
+    paymentLogHtml();
 }
 
 function debtFormHtml(d, idx) {
-  d = d || { name: '', balance: '', apr: '', minPay: '' };
+  d = d || { name: '', balance: '', apr: '', minPay: '', notes: '' };
   return '<h3>' + (idx == null ? 'Add debt' : 'Edit debt') + '</h3>' +
     '<label class="field"><span>Nickname</span><input id="f-name" maxlength="40" value="' + esc(d.name) + '" placeholder="e.g. Travel card"></label>' +
     '<label class="field"><span>Balance ($)</span><input id="f-balance" type="text" inputmode="decimal" min="0" step="any" value="' + esc(d.balance) + '"></label>' +
     '<label class="field"><span>APR (% per year)</span><input id="f-apr" type="text" inputmode="decimal" min="0" step="any" value="' + esc(d.apr) + '"></label>' +
     '<label class="field"><span>Minimum payment ($/mo)</span><input id="f-minpay" type="text" inputmode="decimal" min="0" step="any" value="' + esc(d.minPay) + '"></label>' +
+    '<label class="field"><span>Notes <em class="opt">(optional)</em></span><input id="f-notes" maxlength="120" value="' + esc(d.notes) + '" placeholder="e.g. Chase Sapphire \u00B7 autopay on"></label>' +
     '<div class="modal-actions"><button class="btn ghost" id="m-cancel">Cancel</button>' +
     '<button class="btn primary" id="m-save">Save</button></div>';
 }
@@ -787,17 +866,47 @@ function openDebtForm(idx) {
   openModal(debtFormHtml(idx == null ? null : state.debts[idx], idx));
   $('#m-cancel').addEventListener('click', closeModal);
   $('#m-save').addEventListener('click', function () {
+    var prev = idx == null ? null : state.debts[idx];
     var d = {
       name: $('#f-name').value.trim() || ('Debt ' + (state.debts.length + 1)),
       balance: parseFloat(cleanNumStr($('#f-balance').value)),
       apr: parseFloat(cleanNumStr($('#f-apr').value)),
-      minPay: parseFloat(cleanNumStr($('#f-minpay').value))
+      minPay: parseFloat(cleanNumStr($('#f-minpay').value)),
+      notes: $('#f-notes').value.trim()
     };
     if (!(d.balance > 0)) { $('#f-balance').focus(); return; }
     if (!(d.apr >= 0)) d.apr = 0;
     if (!(d.minPay >= 0)) d.minPay = 0;
+    if (prev) { d.order = prev.order; d.startBalance = prev.startBalance; }
+    else {
+      var maxO = 0;
+      state.debts.forEach(function (x) { if (x.order > maxO) maxO = x.order; });
+      d.order = maxO + 1; d.startBalance = d.balance;
+    }
     if (idx == null) state.debts.push(d); else state.debts[idx] = d;
     save(); closeModal(); render();
+  });
+}
+function openPayForm(idx) {
+  var d = state.debts[idx];
+  if (!d || !(d.balance > 0)) return;
+  openModal('<h3>Log a payment</h3>' +
+    '<p class="dim">How much did you actually pay toward <strong>' + esc(d.name) + '</strong>?</p>' +
+    '<label class="field"><span>Amount ($)</span><input id="p-amount" type="text" inputmode="decimal" min="0" step="any" placeholder="e.g. 200"></label>' +
+    '<div class="modal-actions"><button class="btn ghost" id="m-cancel">Cancel</button>' +
+    '<button class="btn primary" id="m-save">Log it</button></div>');
+  $('#m-cancel').addEventListener('click', closeModal);
+  var amtInput = $('#p-amount'); if (amtInput) amtInput.focus();
+  $('#m-save').addEventListener('click', function () {
+    var amt = parseFloat(cleanNumStr($('#p-amount').value));
+    if (!(amt > 0)) { $('#p-amount').focus(); return; }
+    amt = Math.min(amt, d.balance);
+    d.balance = Math.round((d.balance - amt) * 100) / 100;
+    state.payments.push({ debtIdx: idx, name: d.name, amount: amt, date: new Date().toISOString() });
+    save(); closeModal(); render();
+    toast(d.balance <= 0
+      ? '\u2713 ' + d.name + ' paid off \u2014 ' + money(amt) + ' logged'
+      : '\u2713 ' + money(amt) + ' logged toward ' + d.name);
   });
 }
 
@@ -822,9 +931,9 @@ function vPaychecks() {
 
 function vSchedule(strategy) {
   var s = sim();
-  var r = strategy === 'snowball' ? s.snowball : s.avalanche;
-  var title = strategy === 'snowball' ? 'Snowball Plan' : 'Avalanche Plan';
-  var sub = strategy === 'snowball' ? 'Smallest balance first' : 'Highest APR first';
+  var r = stratResult(s, strategy);
+  var title = stratName(strategy) + ' Plan';
+  var sub = stratSub(strategy);
   if (!state.debts.length) return emptyDebtsHtml('Add your debts to see the ' + title.toLowerCase() + '.');
 
   var usedIdx = {};
@@ -861,10 +970,11 @@ function vSchedule(strategy) {
       '<div class="sched-foot dim">Interest this month: ' + money(sc.interest) + '</div></div></details>';
   }).join('');
 
-  var kick = strategy === 'snowball'
-    ? kh('Snowball plan', 'Smallest balance first. Quick wins that build momentum.')
-    : kh('Avalanche plan', 'Highest APR first. Mathematically the cheapest way out.');
-  return '<section class="card">' + kick + '<h3>' + title + '</h3><p class="dim">' + sub + ' \u00B7 ' +
+  var kick = kh(stratName(strategy) + ' plan',
+    strategy === 'snowball' ? 'Smallest balance first. Quick wins that build momentum.' :
+    strategy === 'custom' ? 'Your order, your call. Set the ranking on the Debts tab.' :
+    'Highest APR first. Mathematically the cheapest way out.');
+  return '<section class="card">' + segHtml() + kick + '<h3>' + title + '</h3><p class="dim">' + sub + ' \u00B7 ' +
     (r.debtFreeLabel ? 'debt-free ' + esc(r.debtFreeLabel) : 'beyond 30 years') + ' \u00B7 ' +
     money(r.totalInterest) + ' total interest</p><div class="chips">' + chips + '</div></section>' +
     '<section class="card"><div class="kicker">Month by month</div>' + months + '</section>';
@@ -914,18 +1024,13 @@ function render() {
 function wire(el) {
   /* dashboard */
   function strategyToast() {
-    var name = state.strategy === 'snowball' ? 'Snowball' : 'Avalanche';
-    toast('\u2713 ' + name + ' plan active \u2014 payoff order recalculated');
+    toast('\u2713 ' + stratName(state.strategy) + ' plan active \u2014 payoff order recalculated');
   }
   $all('[data-strategy]', el).forEach(function (b) {
     b.addEventListener('click', function () {
       if (state.strategy === b.getAttribute('data-strategy')) return;
       state.strategy = b.getAttribute('data-strategy'); save(); render(); strategyToast();
     });
-  });
-  var sw = $('#switch-strategy', el);
-  if (sw) sw.addEventListener('click', function () {
-    state.strategy = state.strategy === 'avalanche' ? 'snowball' : 'avalanche'; save(); render(); strategyToast();
   });
   /* what-if slider: live readout, no full re-render while dragging */
   var wi = $('#whatif-slider', el);
@@ -1006,6 +1111,45 @@ function wire(el) {
         state.debts.splice(i, 1); save(); render();
       });
     });
+  });
+  /* log a real payment against a debt */
+  $all('[data-logpay]', el).forEach(function (b) {
+    b.addEventListener('click', function () { openPayForm(+b.getAttribute('data-logpay')); });
+  });
+  $all('[data-delpay]', el).forEach(function (b) {
+    b.addEventListener('click', function () {
+      var pi = +b.getAttribute('data-delpay');
+      var p = state.payments[pi];
+      if (!p) return;
+      confirmModal('Remove payment?', 'Take the ' + money(p.amount) + ' back off <strong>' + esc(p.name) +
+        '</strong>? The balance goes back up and the plan recalculates.', 'Remove', function () {
+        var d = state.debts[p.debtIdx];
+        if (!d || d.name !== p.name) {
+          d = null;
+          for (var i = 0; i < state.debts.length; i++) {
+            if (state.debts[i].name === p.name) { d = state.debts[i]; break; }
+          }
+        }
+        if (d) d.balance = Math.round((d.balance + p.amount) * 100) / 100;
+        state.payments.splice(pi, 1); save(); render();
+      });
+    });
+  });
+  /* custom order: swap order values with the neighbor */
+  function moveDebt(i, dir) {
+    var order = state.debts.map(function (d, k) { return k; })
+      .sort(function (a, b) { return state.debts[a].order - state.debts[b].order; });
+    var pos = order.indexOf(i), pos2 = pos + dir;
+    if (pos < 0 || pos2 < 0 || pos2 >= order.length) return;
+    var a = state.debts[order[pos]], b = state.debts[order[pos2]];
+    var t = a.order; a.order = b.order; b.order = t;
+    save(); render();
+  }
+  $all('[data-up]', el).forEach(function (b) {
+    b.addEventListener('click', function () { moveDebt(+b.getAttribute('data-up'), -1); });
+  });
+  $all('[data-down]', el).forEach(function (b) {
+    b.addEventListener('click', function () { moveDebt(+b.getAttribute('data-down'), 1); });
   });
   /* paychecks */
   var de = $('#default-extra', el);

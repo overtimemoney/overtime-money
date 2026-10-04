@@ -438,7 +438,29 @@ input::placeholder { color: var(--muted); opacity: 0.8; }
 }
 .debt-nums { font-size: 13px; color: var(--muted); }
 .debt-nums .serif-money { font-size: 14px; color: var(--text); }
-.debt-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.debt-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+.debt-notes { display: block; font-size: 13px; color: var(--muted); font-style: italic; margin-top: 2px; }
+.debt-progress { margin-top: 10px; }
+.debt-progress .progress { height: 6px; }
+.debt-progress .progress-label { margin-top: 5px; font-size: 11px; }
+.ord-num { font-size: 12px; font-weight: 700; color: var(--accent-strong); background: var(--accent-soft);
+  border-radius: 999px; padding: 2px 9px; margin-left: 6px; vertical-align: 2px; font-family: 'Nunito', sans-serif; }
+.btn.small.ord { padding: 8px 10px; min-height: 0; font-size: 15px; line-height: 1; }
+
+/* showdown badges */
+.compare .badge { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+  background: var(--cta1); color: #fff; border-radius: 999px; padding: 3px 9px; margin-left: 6px; vertical-align: 2px; font-style: normal; }
+
+/* payment log */
+.paylog-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
+.paylog-row:last-of-type { border-bottom: none; }
+.paylog-main { flex: 1; min-width: 0; }
+.paylog-main strong { display: block; font-size: 15px; color: var(--text); font-family: 'Newsreader', Georgia, serif; }
+.paylog-sub { font-size: 13px; color: var(--muted); }
+.paylog-sub .serif-money { color: var(--text); }
+
+/* optional field marker in modals */
+.field .opt { font-style: normal; font-weight: 400; color: var(--muted); font-size: 12px; }
 
 /* paychecks */
 .pay-row { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
