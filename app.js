@@ -31,8 +31,12 @@ var MAX_MONTHS = 360;
 var MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun',
                    'Jul','Aug','Sep','Oct','Nov','Dec'];
 
+/* Postel's Law: accept "$5,000", "21.99%", " 200 " the way people type money. */
+function cleanNumStr(v) {
+  return String(v == null ? '' : v).replace(/[$,\s%]/g, '');
+}
 function toNum(v, fallback) {
-  var n = parseFloat(v);
+  var n = parseFloat(cleanNumStr(v));
   return (typeof n === 'number' && isFinite(n)) ? n : (fallback || 0);
 }
 
@@ -359,7 +363,7 @@ function primary() { var s = sim(); return state.strategy === 'snowball' ? s.sno
 function extraFor(m) {
   var o = state.overrides;
   var has = o && m <= 12 && o[m] !== undefined && o[m] !== null && o[m] !== '';
-  var v = has ? parseFloat(o[m]) : parseFloat(state.defaultExtra);
+  var v = has ? parseFloat(cleanNumStr(o[m])) : parseFloat(cleanNumStr(state.defaultExtra));
   return (isFinite(v) && v > 0) ? v : 0;
 }
 function cappedMonth(r) {
@@ -507,7 +511,7 @@ function buildExport() {
       return { name: d.name, balance: r2(d.balance), aprPercent: r2(d.apr), minimumPayment: r2(d.minPay) };
     }),
     extraPayments: {
-      defaultPerMonth: r2(parseFloat(state.defaultExtra) || 0),
+      defaultPerMonth: r2(parseFloat(cleanNumStr(state.defaultExtra)) || 0),
       monthlyOverrides: state.overrides || {},
       _note: 'Month numbers start at 1 = ' + (((sched[0] || {}).label) || 'plan start') + '. Any month not listed uses the default.'
     },
@@ -548,7 +552,7 @@ function emptyDebtsHtml(msg) {
 }
 
 function whatIfSim() {
-  var base = parseFloat(state.defaultExtra) || 0;
+  var base = parseFloat(cleanNumStr(state.defaultExtra)) || 0;
   var s = window.OvertimeEngine.simulate(state.debts, base + whatIf, state.overrides);
   return state.strategy === 'snowball' ? s.snowball : s.avalanche;
 }
@@ -773,9 +777,9 @@ function openDebtForm(idx) {
   $('#m-save').addEventListener('click', function () {
     var d = {
       name: $('#f-name').value.trim() || ('Debt ' + (state.debts.length + 1)),
-      balance: parseFloat($('#f-balance').value),
-      apr: parseFloat($('#f-apr').value),
-      minPay: parseFloat($('#f-minpay').value)
+      balance: parseFloat(cleanNumStr($('#f-balance').value)),
+      apr: parseFloat(cleanNumStr($('#f-apr').value)),
+      minPay: parseFloat(cleanNumStr($('#f-minpay').value))
     };
     if (!(d.balance > 0)) { $('#f-balance').focus(); return; }
     if (!(d.apr >= 0)) d.apr = 0;
@@ -994,14 +998,14 @@ function wire(el) {
   /* paychecks */
   var de = $('#default-extra', el);
   if (de) de.addEventListener('change', function () {
-    var v = parseFloat(de.value);
+    var v = parseFloat(cleanNumStr(de.value));
     state.defaultExtra = (isFinite(v) && v >= 0) ? v : '';
     save(); render();
   });
   $all('[data-override]', el).forEach(function (inp) {
     inp.addEventListener('change', function () {
       var m = inp.getAttribute('data-override');
-      var v = parseFloat(inp.value);
+      var v = parseFloat(cleanNumStr(inp.value));
       if (inp.value.trim() === '' || !isFinite(v) || v < 0) delete state.overrides[m];
       else state.overrides[m] = v;
       save(); render();
