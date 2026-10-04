@@ -1,0 +1,25 @@
+{
+  "background_color": "#F8F6FF",
+  "description": "The debt payoff calculator built for nurses and shift workers with irregular income.",
+  "display": "standalone",
+  "icons": [
+    {
+      "purpose": "any",
+      "sizes": "192x192",
+      "src": "icon-192.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "512x512",
+      "src": "icon-512.png",
+      "type": "image/png"
+    }
+  ],
+  "name": "Overtime Money \u2014 Debt Payoff Calculator",
+  "orientation": "portrait",
+  "scope": "./",
+  "short_name": "Overtime Money",
+  "start_url": "./app-9f3k7x2m4q.html",
+  "theme_color": "#F8F6FF"
+}
