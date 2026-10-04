@@ -823,6 +823,8 @@ function vSchedule(strategy) {
   }).join('');
 
   var months = r.schedule.map(function (sc, i) {
+    var archived = i < state.monthIdx;
+    var current = i === state.monthIdx;
     var rows = sc.payments.map(function (p) {
       var tot = p.minPaid + p.extraPaid;
       if (tot <= 0 && p.endBalance <= 0) return '';
@@ -833,9 +835,12 @@ function vSchedule(strategy) {
     var tgt = sc.extraTarget && sc.extraApplied > 0
       ? '<div class="sched-foot">\uD83C\uDFAF Extra \u2192 <strong>' + esc(sc.extraTarget) + '</strong> (' + money(sc.extraApplied) + ')</div>'
       : '';
-    return '<details class="sched-month"' + (i === 0 ? ' open' : '') + '>' +
-      '<summary><strong>Month ' + sc.month + ' \u00B7 ' + esc(sc.label) + '</strong>' +
-      '<span>' + money(sc.totalLeft) + ' left</span></summary>' +
+    return '<details class="sched-month' + (archived ? ' archived' : '') + (current ? ' current' : '') + '"' + (current ? ' open' : '') + '>' +
+      '<summary><span class="sched-sum">' +
+      (archived ? '<span class="sched-check">\u2713</span>' : '') +
+      '<strong>Month ' + sc.month + ' \u00B7 ' + esc(sc.label) + '</strong>' +
+      (current ? '<span class="sched-now">this month</span>' : '') +
+      '</span><span>' + money(sc.totalLeft) + ' left</span></summary>' +
       '<div class="sched-body">' + rows + tgt +
       '<div class="sched-foot dim">Interest this month: ' + money(sc.interest) + '</div></div></details>';
   }).join('');
