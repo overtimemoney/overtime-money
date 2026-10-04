@@ -668,10 +668,10 @@ function vDashboard() {
         ' \u2014 press and hold: \u2713 advances when these are paid, \u2190 goes back.</p>' +
       '<div class="month-nav">' +
         '<button class="btn small onething-ghost holdbtn" id="m-back" ' + (cm <= 1 ? 'disabled' : '') + '>' +
-          '<span class="hold-fill"></span><span class="hold-label">Hold \u2190 \u00B7 last month</span></button>' +
+          '<span class="hold-fill"></span><span class="hold-label">Hold \u2190 last\u00A0month</span></button>' +
         '<span class="month-ind">Month ' + cm + (maxM ? ' of ' + maxM : '') + '</span>' +
         '<button class="btn small onething-solid holdbtn" id="m-fwd" ' + (cm >= maxM ? 'disabled' : '') + '>' +
-          '<span class="hold-fill"></span><span class="hold-label">Hold \u2713 \u00B7 next month</span></button>' +
+          '<span class="hold-fill"></span><span class="hold-label">Hold \u2713 next\u00A0month</span></button>' +
       '</div>' +
     '</section>';
   } else {
