@@ -396,12 +396,12 @@ function donut(pct) {
   var r = 54, c = 2 * Math.PI * r;
   var p = Math.min(100, Math.max(0, +pct || 0));
   var off = c * (1 - p / 100);
-  return '<svg class="donut" viewBox="0 0 120 120" role="img" aria-label="' + p.toFixed(0) +
+  return '<svg class="donut" viewBox="0 0 120 120" role="img" aria-label="' + p.toFixed(1) +
     ' percent paid off"><circle class="donut-track" cx="60" cy="60" r="' + r + '"/>' +
     '<circle class="donut-arc" cx="60" cy="60" r="' + r + '" stroke-dasharray="' + c.toFixed(1) +
     '" stroke-dashoffset="' + off.toFixed(1) + '"/>' +
     '<text class="donut-pct" x="60" y="60" text-anchor="middle" dominant-baseline="central">' +
-    p.toFixed(0) + '%</text></svg>';
+    p.toFixed(1) + '%</text></svg>';
 }
 /* sticky footer bar content: orientation at a glance */
 function footerHtml() {
@@ -686,8 +686,8 @@ function vDashboard() {
 
   return oneThing +
   '<section class="card herowash">' +
-    kh('Total debt', 'Your whole payoff at a glance \u2014 toggle strategies to compare.') +
-    '<div class="hero-total">' + money(initial) + '</div>' +
+    kh('Remaining debt', 'Your projected balance \u2014 toggle strategies to compare.') +
+    '<div class="hero-total">' + money(remainingBefore) + '</div>' +
     '<div class="seg" role="tablist">' +
       '<button class="' + (state.strategy === 'avalanche' ? 'on' : '') + '" data-strategy="avalanche">Avalanche</button>' +
       '<button class="' + (state.strategy === 'snowball' ? 'on' : '') + '" data-strategy="snowball">Snowball</button>' +
@@ -699,7 +699,7 @@ function vDashboard() {
       '</div>' +
     '</div>' +
     '<div class="progress"><div class="progress-fill" style="width:' + pct.toFixed(1) + '%"></div></div>' +
-    '<div class="progress-label">' + money(paid) + ' of ' + money(initial) + ' paid off (projected) \u00B7 ' + pct.toFixed(0) + '%</div>' +
+    '<div class="progress-label">' + money(paid) + ' of ' + money(initial) + ' paid off (projected) \u00B7 ' + pct.toFixed(1) + '%</div>' +
   '</section>' +
   '<section class="card whatif">' +
     '<div class="kicker">Play with it</div>' +
