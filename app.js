@@ -1059,6 +1059,9 @@ document.addEventListener('DOMContentLoaded', function () {
       if (y > lastY && y > 140) bar.classList.add('hide');
       else if (y < lastY) bar.classList.remove('hide');
     }
+    /* desktop: shrink the top nav pill once scrolled past it */
+    var tabs = document.querySelector('.tabbar');
+    if (tabs) tabs.classList.toggle('compact', y > 160);
     lastY = y;
   }, { passive: true });
 });
