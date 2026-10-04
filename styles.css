@@ -439,6 +439,13 @@ input::placeholder { color: var(--muted); opacity: 0.8; }
 .debt-nums { font-size: 13px; color: var(--muted); }
 .debt-nums .serif-money { font-size: 14px; color: var(--text); }
 .debt-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+/* narrow screens: debt info gets the full row, actions drop to their own row below */
+@media (max-width: 719px) {
+  .debt-card { flex-wrap: wrap; }
+  .debt-main { flex: 1 1 calc(100% - 38px); }
+  .debt-actions { flex: 1 1 100%; justify-content: flex-start; margin-top: 12px; gap: 6px; }
+  .debt-actions .btn.small { padding: 8px 11px; min-height: 40px; font-size: 13px; }
+}
 .debt-notes { display: block; font-size: 13px; color: var(--muted); font-style: italic; margin-top: 2px; }
 .debt-progress { margin-top: 10px; }
 .debt-progress .progress { height: 6px; }

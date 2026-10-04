@@ -821,16 +821,17 @@ function paymentLogHtml() {
 
 function vDebts() {
   var custom = state.strategy === 'custom';
+  /* Cards always follow your ranking — the Custom plan attacks in this order;
+   * Avalanche/Snowball use their own order regardless. */
   var disp = state.debts.map(function (d, i) { return i; });
-  if (custom) disp.sort(function (a, b) { return state.debts[a].order - state.debts[b].order; });
+  disp.sort(function (a, b) { return state.debts[a].order - state.debts[b].order; });
   var cards = disp.map(function (i) {
     var d = state.debts[i];
-    var ordBtns = custom
-      ? '<button class="btn small ghost ord" data-up="' + i + '" aria-label="Move ' + esc(d.name) + ' earlier">\u2191</button>' +
-        '<button class="btn small ghost ord" data-down="' + i + '" aria-label="Move ' + esc(d.name) + ' later">\u2193</button>'
-      : '';
+    var ordBtns =
+      '<button class="btn small ghost ord" data-up="' + i + '" aria-label="Move ' + esc(d.name) + ' earlier">\u2191</button>' +
+      '<button class="btn small ghost ord" data-down="' + i + '" aria-label="Move ' + esc(d.name) + ' later">\u2193</button>';
     return '<div class="debt-card"><span class="debt-dot ' + debtColorClass(i) + '"></span><div class="debt-main">' +
-      '<strong>' + esc(d.name) + (custom ? ' <span class="ord-num">#' + d.order + '</span>' : '') + '</strong>' +
+      '<strong>' + esc(d.name) + ' <span class="ord-num">#' + d.order + '</span></strong>' +
       '<span class="debt-nums">' + money(d.balance) + ' \u00B7 ' + (+d.apr).toFixed(2) + '% APR \u00B7 ' +
       money(d.minPay) + '/mo min</span>' +
       (d.notes ? '<span class="debt-notes">' + esc(d.notes) + '</span>' : '') +
@@ -840,10 +841,14 @@ function vDebts() {
       '<button class="btn small ghost" data-edit="' + i + '">Edit</button>' +
       '<button class="btn small danger-ghost" data-del="' + i + '">Delete</button></div></div>';
   }).join('');
+  var rankHint = state.debts.length > 1
+    ? (custom
+      ? '<p class="hint">Custom plan active \u2014 your extra payments attack in this order. Switch strategies on the Dashboard.</p>'
+      : '<p class="hint">Rank with \u2191 \u2193 \u2014 the Custom plan attacks in this order. (Avalanche and Snowball use their own.)</p>')
+    : '';
   return '<section class="card">' + kh('Your debts', 'List what you owe. No judgment \u2014 this is the starting line, not a report card.') +
     '<div class="card-head"><h3>My Debts (' + state.debts.length + '/' + MAX_DEBTS + ')</h3></div>' +
-    (custom && state.debts.length > 1
-      ? '<p class="hint">Custom plan active \u2014 use \u2191 \u2193 to set the order your extra payments attack.</p>' : '') +
+    rankHint +
     (cards || '<p class="dim">No debts yet. Add your first one below.</p>') +
     '<button class="btn primary block" id="add-debt">+ Add debt</button>' +
     '<p class="hint">List every debt: nickname, balance, APR, minimum payment. Type in the boxes \u2014 everything else calculates itself.</p></section>' +
