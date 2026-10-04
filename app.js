@@ -720,8 +720,8 @@ function vDashboard() {
     '</div>' +
     '<p class="compare-note">Avalanche saves <strong class="coral">' + money(Math.max(0, saved)) +
     '</strong> in interest \u00B7 <strong>' + esc(fasterTxt) + '</strong></p>' +
-    '<button class="btn ghost" id="switch-strategy">Follow the ' +
-      (state.strategy === 'avalanche' ? 'snowball' : 'avalanche') + ' plan instead</button>' +
+    '<button class="btn ghost" id="switch-strategy">Switch to the ' +
+      (state.strategy === 'avalanche' ? 'Snowball' : 'Avalanche') + ' plan</button>' +
   '</section>' +
   victoryLogHtml();
 }
@@ -892,12 +892,19 @@ function render() {
 
 function wire(el) {
   /* dashboard */
+  function strategyToast() {
+    var name = state.strategy === 'snowball' ? 'Snowball' : 'Avalanche';
+    toast('\u2713 ' + name + ' plan active \u2014 payoff order recalculated');
+  }
   $all('[data-strategy]', el).forEach(function (b) {
-    b.addEventListener('click', function () { state.strategy = b.getAttribute('data-strategy'); save(); render(); });
+    b.addEventListener('click', function () {
+      if (state.strategy === b.getAttribute('data-strategy')) return;
+      state.strategy = b.getAttribute('data-strategy'); save(); render(); strategyToast();
+    });
   });
   var sw = $('#switch-strategy', el);
   if (sw) sw.addEventListener('click', function () {
-    state.strategy = state.strategy === 'avalanche' ? 'snowball' : 'avalanche'; save(); render();
+    state.strategy = state.strategy === 'avalanche' ? 'snowball' : 'avalanche'; save(); render(); strategyToast();
   });
   /* what-if slider: live readout, no full re-render while dragging */
   var wi = $('#whatif-slider', el);
