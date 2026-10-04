@@ -291,12 +291,12 @@ var ICONS = {
 };
 var BRAND_SVG = '<span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M14.6 9.4c-.6-.9-1.5-1.4-2.6-1.4-1.4 0-2.5.9-2.5 2.1 0 2.8 5 1.4 5 4.3 0 1.2-1.1 2.1-2.5 2.1-1.1 0-2-.5-2.6-1.4"/></svg></span>';
 var TABS = [
+  ['start', ICONS.start, 'Start Here'],
   ['dashboard', ICONS.dashboard, 'Home'],
   ['debts', ICONS.debts, 'Debts'],
   ['paychecks', ICONS.paychecks, 'Paychecks'],
   ['avalanche', ICONS.avalanche, 'Avalanche'],
-  ['snowball', ICONS.snowball, 'Snowball'],
-  ['start', ICONS.start, 'Start Here']
+  ['snowball', ICONS.snowball, 'Snowball']
 ];
 
 /* ---------------- state ---------------- */
@@ -335,7 +335,8 @@ function load() {
   return s0;
 }
 var state = load();
-var view = 'dashboard';
+/* First-run lands on Start Here (setup); returning users land on their dashboard. */
+var view = (state.debts && state.debts.length) ? 'dashboard' : 'start';
 
 function sim() { return window.OvertimeEngine.simulate(state.debts, state.defaultExtra, state.overrides); }
 function primary() { var s = sim(); return state.strategy === 'snowball' ? s.snowball : s.avalanche; }
