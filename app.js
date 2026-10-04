@@ -24,6 +24,12 @@
  *   flat $200 extra      -> avalanche 46 mo / $6,657.03 ; snowball 48 mo / $7,278.45
  *   overrides 450/100/300-> avalanche 46 mo / $6,394.97 ; snowball 46 mo / $6,835.38
  * ========================================================================= */
+/* Shared by the engine and UI scopes below. Postel's Law: accept "$5,000",
+   "21.99%", " 200 " the way people type money. */
+function cleanNumStr(v) {
+  return String(v == null ? '' : v).replace(/[$,\s%]/g, '');
+}
+
 (function (root) {
 'use strict';
 
@@ -31,10 +37,6 @@ var MAX_MONTHS = 360;
 var MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun',
                    'Jul','Aug','Sep','Oct','Nov','Dec'];
 
-/* Postel's Law: accept "$5,000", "21.99%", " 200 " the way people type money. */
-function cleanNumStr(v) {
-  return String(v == null ? '' : v).replace(/[$,\s%]/g, '');
-}
 function toNum(v, fallback) {
   var n = parseFloat(cleanNumStr(v));
   return (typeof n === 'number' && isFinite(n)) ? n : (fallback || 0);
@@ -764,9 +766,9 @@ function debtFormHtml(d, idx) {
   d = d || { name: '', balance: '', apr: '', minPay: '' };
   return '<h3>' + (idx == null ? 'Add debt' : 'Edit debt') + '</h3>' +
     '<label class="field"><span>Nickname</span><input id="f-name" maxlength="40" value="' + esc(d.name) + '" placeholder="e.g. Travel card"></label>' +
-    '<label class="field"><span>Balance ($)</span><input id="f-balance" type="number" inputmode="decimal" min="0" step="any" value="' + esc(d.balance) + '"></label>' +
-    '<label class="field"><span>APR (% per year)</span><input id="f-apr" type="number" inputmode="decimal" min="0" step="any" value="' + esc(d.apr) + '"></label>' +
-    '<label class="field"><span>Minimum payment ($/mo)</span><input id="f-minpay" type="number" inputmode="decimal" min="0" step="any" value="' + esc(d.minPay) + '"></label>' +
+    '<label class="field"><span>Balance ($)</span><input id="f-balance" type="text" inputmode="decimal" min="0" step="any" value="' + esc(d.balance) + '"></label>' +
+    '<label class="field"><span>APR (% per year)</span><input id="f-apr" type="text" inputmode="decimal" min="0" step="any" value="' + esc(d.apr) + '"></label>' +
+    '<label class="field"><span>Minimum payment ($/mo)</span><input id="f-minpay" type="text" inputmode="decimal" min="0" step="any" value="' + esc(d.minPay) + '"></label>' +
     '<div class="modal-actions"><button class="btn ghost" id="m-cancel">Cancel</button>' +
     '<button class="btn primary" id="m-save">Save</button></div>';
 }
@@ -795,13 +797,13 @@ function vPaychecks() {
   for (var m = 1; m <= 12; m++) {
     var v = state.overrides[m];
     rows += '<div class="pay-row"><span class="pay-month">Month ' + m + '</span>' +
-      '<input type="number" inputmode="decimal" min="0" step="any" data-override="' + m + '"' +
+      '<input type="text" inputmode="decimal" min="0" step="any" data-override="' + m + '"' +
       ' value="' + esc(v == null ? '' : v) + '" placeholder="default">' +
       '<span class="pay-hint">' + esc(PAY_HINTS[m] || '') + '</span></div>';
   }
   return '<section class="card">' + kh('Your paychecks', 'Paychecks change. Your plan keeps up \u2014 set each month as it comes.') + '<h3>My Paychecks</h3>' +
     '<label class="field"><span>Default extra payment per month ($)</span>' +
-    '<input id="default-extra" type="number" inputmode="decimal" min="0" step="any" value="' +
+    '<input id="default-extra" type="text" inputmode="decimal" min="0" step="any" value="' +
     esc(state.defaultExtra) + '" placeholder="e.g. 200"></label>' +
     '<h4>Monthly overrides</h4>' + rows +
     '<p class="hint">Leave a month blank to use the default. <strong>Months 13 and beyond always use the default.</strong> ' +
