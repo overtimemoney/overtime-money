@@ -823,8 +823,8 @@ function vSchedule(strategy) {
   }).join('');
 
   var months = r.schedule.map(function (sc, i) {
-    var archived = i < state.monthIdx;
-    var current = i === state.monthIdx;
+    var archived = i < state.currentMonth - 1;
+    var current = i === state.currentMonth - 1;
     var rows = sc.payments.map(function (p) {
       var tot = p.minPaid + p.extraPaid;
       if (tot <= 0 && p.endBalance <= 0) return '';
