@@ -337,6 +337,7 @@ function load() {
 var state = load();
 /* First-run lands on Start Here (setup); returning users land on their dashboard. */
 var view = (state.debts && state.debts.length) ? 'dashboard' : 'start';
+var whatIf = 0; /* hypothetical extra $/mo — playground only, never saved to the plan */
 
 function sim() { return window.OvertimeEngine.simulate(state.debts, state.defaultExtra, state.overrides); }
 function primary() { var s = sim(); return state.strategy === 'snowball' ? s.snowball : s.avalanche; }
@@ -467,6 +468,21 @@ function emptyDebtsHtml(msg) {
     '<button class="btn primary" data-goto="debts">Add your debts</button></section>';
 }
 
+function whatIfSim() {
+  var base = parseFloat(state.defaultExtra) || 0;
+  var s = window.OvertimeEngine.simulate(state.debts, base + whatIf, state.overrides);
+  return state.strategy === 'snowball' ? s.snowball : s.avalanche;
+}
+function whatIfResultHtml(r) {
+  if (!(whatIf > 0)) return '<p class="dim whatif-hint">Drag the slider \u2014 watch your debt-free date move.</p>';
+  var w = whatIfSim();
+  var monthsSooner = (r.months != null && w.months != null) ? (r.months - w.months) : null;
+  var interestSaved = Math.max(0, r.totalInterest - w.totalInterest);
+  var soonerTxt = (monthsSooner != null && monthsSooner > 0)
+    ? '<strong>' + monthsSooner + (monthsSooner === 1 ? ' month sooner' : ' months sooner') + '</strong> \u00B7 ' : '';
+  return '<p class="whatif-line">Debt-free by <strong>' + esc(w.debtFreeLabel || '10+ years') + '</strong></p>' +
+    '<p class="whatif-sub">' + soonerTxt + money(interestSaved) + ' less interest</p>';
+}
 function vDashboard() {
   var s = sim();
   if (!state.debts.length) return emptyDebtsHtml('Add your debts to see your payoff plan.');
@@ -530,6 +546,16 @@ function vDashboard() {
     '</div>' +
     '<div class="progress"><div class="progress-fill" style="width:' + pct.toFixed(1) + '%"></div></div>' +
     '<div class="progress-label">' + money(paid) + ' of ' + money(initial) + ' paid off (projected) \u00B7 ' + pct.toFixed(0) + '%</div>' +
+  '</section>' +
+  '<section class="card whatif">' +
+    '<div class="kicker">Play with it</div>' +
+    '<h3>What if you found extra each month?</h3>' +
+    '<div class="whatif-row">' +
+      '<input type="range" id="whatif-slider" min="0" max="500" step="10" value="' + whatIf + '" aria-label="Hypothetical extra dollars per month"' +
+      ' style="background:linear-gradient(90deg, var(--accent) ' + (whatIf / 5) + '%, var(--accent-soft) ' + (whatIf / 5) + '%);">' +
+      '<div class="whatif-amt" id="whatif-amt">+$' + whatIf + '/mo</div>' +
+    '</div>' +
+    '<div id="whatif-result">' + whatIfResultHtml(r) + '</div>' +
   '</section>' +
   '<section class="card">' +
     '<div class="kicker">Strategy showdown</div>' +
@@ -703,6 +729,15 @@ function wire(el) {
   var sw = $('#switch-strategy', el);
   if (sw) sw.addEventListener('click', function () {
     state.strategy = state.strategy === 'avalanche' ? 'snowball' : 'avalanche'; save(); render();
+  });
+  /* what-if slider: live readout, no full re-render while dragging */
+  var wi = $('#whatif-slider', el);
+  if (wi) wi.addEventListener('input', function () {
+    whatIf = parseInt(wi.value, 10) || 0;
+    var pct = whatIf / 5;
+    wi.style.background = 'linear-gradient(90deg, var(--accent) ' + pct + '%, var(--accent-soft) ' + pct + '%)';
+    var amt = $('#whatif-amt'); if (amt) amt.textContent = '+$' + whatIf + '/mo';
+    var res = $('#whatif-result'); if (res) res.innerHTML = whatIfResultHtml(primary());
   });
   var back = $('#m-back', el), fwd = $('#m-fwd', el);
   if (back) back.addEventListener('click', function () {
