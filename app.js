@@ -285,7 +285,13 @@ var FAQS = [
   ['How do I back up my plan?',
    'On the Start Here tab, tap \u201cExport backup.\u201d It downloads a single file containing everything \u2014 debts, paychecks, progress, victories. Save it somewhere safe (Files app, email it to yourself). On any fresh install, \u201cImport backup\u201d restores it all. Back up before deleting the app, before switching phones, or about once a month for peace of mind.'],
   ['I got a new phone. How do I move my plan over?',
-   'On your old phone: Start Here \u2192 Export backup, then send that file to yourself (email, AirDrop, a cloud drive). On your new phone: open your private app link, go to Start Here \u2192 Import backup, and choose the file. Everything \u2014 debts, paycheck overrides, progress, victory log \u2014 carries over.']
+   'On your old phone: Start Here \u2192 Export backup, then send that file to yourself (email it to yourself or save it to a cloud drive). On your new phone: open your private app link, go to Start Here \u2192 Import backup, and choose the file. Everything \u2014 debts, paycheck overrides, progress, victory log \u2014 carries over.'],
+  ['How do I install it on Android?',
+   'Open your private link in Chrome, tap the \u22ee menu (top right), then \u201cAdd to Home screen\u201d or \u201cInstall app.\u201d \u201cInstall app\u201d tucks it into your app drawer like a store app; either way it opens full-screen and works offline.'],
+  ['\u201cAdd to Home screen\u201d vs \u201cInstall app\u201d \u2014 does it matter?',
+   'Not for your data. Both keep everything on your device, and both are covered by the same backup file. \u201cInstall app\u201d just feels a bit more native (it appears in your app drawer and settings).'],
+  ['If I uninstall it from my Android phone, do I lose my data?',
+   'Yes \u2014 same as iPhone. Your plan lives only in the app\u2019s storage on this phone, with no account or cloud copy, so uninstalling wipes it. Export a backup first (Start Here \u2192 Export backup); on any fresh install, \u201cImport backup\u201d restores everything.']
 ];
 
 var SVG_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">';
