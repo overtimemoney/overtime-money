@@ -1,6 +1,6 @@
 /* Overtime Money service worker — offline-first PWA.
  * Bump CACHE when shipping changes so clients pick up the new version. */
-var CACHE = 'overtime-money-20261004172153';
+var CACHE = 'overtime-money-20261004173456';
 var FILES = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ var FILES = [
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
+  './logo.png',
   './fonts/nunito-latin.woff2',
   './fonts/newsreader-latin.woff2'
 ];
