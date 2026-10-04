@@ -273,6 +273,15 @@ html[data-theme="dark"] .theme-toggle .ico-moon { display: none; }
 .progress-fill { height: 100%; background: linear-gradient(90deg, var(--cta1), var(--cta2)); border-radius: 999px; transition: width 0.3s; }
 .progress-label { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: var(--muted); margin-top: 8px; }
 .progress-label .serif-money { font-size: 13px; }
+.info-dot { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0;
+  border-radius: 50%; border: 1.5px solid var(--line); background: transparent; color: var(--muted);
+  font-size: 12px; font-style: italic; font-weight: 700; line-height: 1; cursor: pointer; margin-left: 6px; vertical-align: 1px; }
+.info-dot:hover { border-color: var(--accent); color: var(--accent); }
+.info-rows { margin: 14px 0 4px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.info-rows .ir { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 14px; font-size: 14px; }
+.info-rows .ir + .ir { border-top: 1px solid var(--line); }
+.info-rows .ir strong { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.info-rows .ir strong.accent { color: var(--accent-strong, var(--accent)); }
 
 /* dark "one thing" card */
 .onething {

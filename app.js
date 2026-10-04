@@ -816,7 +816,8 @@ function debtProgressHtml(d, i) {
     return '<div class="debt-progress"><div class="progress"><div class="progress-fill" style="width:100%"></div></div>' +
       '<div class="progress-label">Paid off \u2713 \u2014 ' + money(start) + ' cleared</div></div>';
   return '<div class="debt-progress"><div class="progress"><div class="progress-fill" style="width:' + pct.toFixed(1) + '%"></div></div>' +
-    '<div class="progress-label">' + money(paid) + ' of ' + money(start) + ' paid</div></div>';
+    '<div class="progress-label">' + money(paid) + ' of ' + money(start) + ' paid' +
+    '<button class="info-dot" data-debtinfo="' + i + '" aria-label="How this progress is calculated">i</button></div></div>';
 }
 
 function paymentLogHtml() {
@@ -912,6 +913,8 @@ function openPayForm(idx) {
   if (!d || !(d.balance > 0)) return;
   openModal('<h3>Log a payment</h3>' +
     '<p class="dim">How much did you actually pay toward <strong>' + esc(d.name) + '</strong>?</p>' +
+    '<p class="hint">Separate from the Paychecks tab \u2014 that sets your monthly plan. ' +
+    'Log a payment when what you actually paid differs from the plan, and everything recalculates around reality.</p>' +
     '<label class="field"><span>Amount ($)</span><input id="p-amount" type="text" inputmode="decimal" min="0" step="any" placeholder="e.g. 200"></label>' +
     '<div class="modal-actions"><button class="btn ghost" id="m-cancel">Cancel</button>' +
     '<button class="btn primary" id="m-save">Log it</button></div>');
@@ -930,6 +933,41 @@ function openPayForm(idx) {
   });
 }
 
+/* "i" popup on a debt's progress bar: this month's interest-vs-principal split */
+function openDebtInfo(idx) {
+  var d = state.debts[idx];
+  if (!d) return;
+  var r = primary(), cm = cappedMonth(r);
+  function recAt(mi) {
+    var sc = r.schedule[mi];
+    if (!sc) return null;
+    for (var k = 0; k < sc.payments.length; k++)
+      if (sc.payments[k].idx === idx) return sc.payments[k];
+    return null;
+  }
+  var cur = recAt(cm - 1), body;
+  if (cur) {
+    var prev = cm > 1 ? recAt(cm - 2) : null;
+    var startB = prev ? prev.endBalance : d.balance;
+    var pay = cur.minPaid + cur.extraPaid;
+    var interest = Math.max(0, cur.endBalance - startB + pay); /* I = E - S + pay */
+    var princ = Math.max(0, startB - cur.endBalance);
+    body = '<div class="info-rows">' +
+      '<div class="ir"><span>This month\u2019s plan for <strong>' + esc(d.name) + '</strong></span><strong>' + money(pay) + '</strong></div>' +
+      '<div class="ir"><span>Goes to interest</span><strong>\u2212' + money(interest) + '</strong></div>' +
+      '<div class="ir"><span>Knocks off the balance</span><strong class="accent">' + money(princ) + '</strong></div></div>' +
+      '<p class="hint">Interest is always paid first \u2014 the bar tracks your balance shrinking, not dollars paid. ' +
+      'As the balance drops, the interest bite gets smaller and more of each payment lands on the bar. ' +
+      'That\u2019s why attacking the highest APR first wins.</p>';
+  } else {
+    body = '<p class="hint">The bar tracks your balance shrinking toward zero. Interest is always paid first each month, ' +
+      'so the bar moves by what\u2019s left after interest \u2014 not by the full payment.</p>';
+  }
+  openModal('<h3>How this bar works</h3>' + body +
+    '<div class="modal-actions"><button class="btn primary block" id="m-close">Got it</button></div>');
+  $('#m-close').addEventListener('click', closeModal);
+}
+
 var PAY_HINTS = { 1: 'overtime month?', 2: 'slow month?' };
 function vPaychecks() {
   var rows = '';
@@ -946,7 +984,8 @@ function vPaychecks() {
     esc(state.defaultExtra) + '" placeholder="e.g. 200"></label>' +
     '<h4>Monthly overrides</h4>' + rows +
     '<p class="hint">Leave a month blank to use the default. <strong>Months 13 and beyond always use the default.</strong> ' +
-    'Overtime month? Enter a bigger number. Slow month? Enter less.</p></section>';
+    'Overtime month? Enter a bigger number. Slow month? Enter less. ' +
+    'This is your plan \u2014 if a month goes differently, log what you actually paid on the Debts tab (Log payment).</p></section>';
 }
 
 function vSchedule(strategy) {
@@ -1135,6 +1174,10 @@ function wire(el) {
   /* log a real payment against a debt */
   $all('[data-logpay]', el).forEach(function (b) {
     b.addEventListener('click', function () { openPayForm(+b.getAttribute('data-logpay')); });
+  });
+  /* "i" popup explaining a debt's progress bar */
+  $all('[data-debtinfo]', el).forEach(function (b) {
+    b.addEventListener('click', function () { openDebtInfo(+b.getAttribute('data-debtinfo')); });
   });
   $all('[data-delpay]', el).forEach(function (b) {
     b.addEventListener('click', function () {
