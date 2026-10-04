@@ -284,6 +284,8 @@ var FAQS = [
    'Free calculators assume one fixed extra payment forever and hand you a date. This is a living, month-by-month plan: variable extra payments for irregular income, both strategies compared, and a concrete \u201cput $X toward Y\u201d instruction for every single month.'],
   ['What does \u201cfirepower\u201d mean?',
    'Your extra payment for the month plus the minimum payments freed up from debts you\u2019ve already killed. That combined amount gets aimed at one focus debt each month \u2014 that\u2019s how payoff accelerates over time.'],
+  ['Check off a month, or log a payment \u2014 what\u2019s the difference?',
+   'Checking off a month moves the plan forward: it says \u201cI made these payments, show me next month.\u201d Logging a payment records what you actually paid \u2014 the balance drops for real and the whole plan recalculates. If you always pay exactly what the plan says, just check months off. Log a payment when reality differed: extra cash from an overtime month, or a tight month where you paid less.'],
   ['What if I have more than ten debts?',
    'Combine your smallest debts into a single entry, or list your ten largest \u2014 the plan barely changes, because the smallest ones are the first to fall anyway.'],
   ['What if my minimum payments change?',
@@ -793,9 +795,22 @@ function victoryLogHtml() {
   '</section>';
 }
 
-function debtProgressHtml(d) {
+function debtProgressHtml(d, i) {
   var start = d.startBalance > 0 ? d.startBalance : d.balance;
-  var paid = Math.max(0, start - d.balance);
+  /* Projected balance after the months you've checked off: the bar moves both
+   * when you check off a month (plan progress) and when you log a real payment
+   * (balances drop, so the whole projection shifts). */
+  var r = primary(), cm = cappedMonth(r);
+  var expectedNow = d.balance;
+  if (d.balance > 0 && cm > 1) {
+    var mrec = r.schedule[cm - 2];
+    if (mrec) {
+      for (var k = 0; k < mrec.payments.length; k++) {
+        if (mrec.payments[k].idx === i) { expectedNow = mrec.payments[k].endBalance; break; }
+      }
+    }
+  }
+  var paid = Math.max(0, start - expectedNow);
   var pct = start > 0 ? Math.min(100, (paid / start) * 100) : 0;
   if (d.balance <= 0)
     return '<div class="debt-progress"><div class="progress"><div class="progress-fill" style="width:100%"></div></div>' +
@@ -835,7 +850,7 @@ function vDebts() {
       '<span class="debt-nums">' + money(d.balance) + ' \u00B7 ' + (+d.apr).toFixed(2) + '% APR \u00B7 ' +
       money(d.minPay) + '/mo min</span>' +
       (d.notes ? '<span class="debt-notes">' + esc(d.notes) + '</span>' : '') +
-      debtProgressHtml(d) + '</div>' +
+      debtProgressHtml(d, i) + '</div>' +
       '<div class="debt-actions">' + ordBtns +
       '<button class="btn small ghost" data-logpay="' + i + '">Log payment</button>' +
       '<button class="btn small ghost" data-edit="' + i + '">Edit</button>' +
