@@ -301,6 +301,7 @@ var ICONS = {
   paychecks: SVG_OPEN + '<rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10.5h16M8.5 3.5v4M15.5 3.5v4"/></svg>',
   avalanche: SVG_OPEN + '<path d="M3.5 19.5L9.5 9l3.2 4.8 2.6-3.4 5.2 9.1z"/></svg>',
   snowball: SVG_OPEN + '<path d="M12 4v16M5 8l14 8M19 8L5 16"/></svg>',
+  plan: SVG_OPEN + '<path d="M5.5 21V4"/><path d="M5.5 5c4-2.5 7 2.5 11 0v8c-4 2.5-7-2.5-11 0"/></svg>',
   start: SVG_OPEN + '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.4 2.4 0 1 1 3.6 2c-.8.6-1.2 1-1.2 1.9"/><circle cx="12" cy="16.9" r="0.7" fill="currentColor" stroke="none"/></svg>'
 };
 var BRAND_SVG = '<span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M14.6 9.4c-.6-.9-1.5-1.4-2.6-1.4-1.4 0-2.5.9-2.5 2.1 0 2.8 5 1.4 5 4.3 0 1.2-1.1 2.1-2.5 2.1-1.1 0-2-.5-2.6-1.4"/></svg></span>';
@@ -309,8 +310,7 @@ var TABS = [
   ['dashboard', ICONS.dashboard, 'Home'],
   ['debts', ICONS.debts, 'Debts'],
   ['paychecks', ICONS.paychecks, 'Paychecks'],
-  ['avalanche', ICONS.avalanche, 'Avalanche'],
-  ['snowball', ICONS.snowball, 'Snowball']
+  ['plan', ICONS.plan, 'Plan']
 ];
 
 /* ---------------- state ---------------- */
@@ -862,7 +862,7 @@ function vStart() {
     '<ol class="steps">' +
     '<li><strong>List your debts</strong> on the Debts tab: nickname, balance, APR, minimum payment.</li>' +
     '<li><strong>Tell it about your paychecks</strong> on the Paychecks tab: your default extra payment, plus a different number for overtime or slow months.</li>' +
-    '<li><strong>Follow the plan</strong> on the Dashboard, Avalanche, or Snowball tab \u2014 it tells you exactly what to pay each debt, every month.</li>' +
+    '<li><strong>Follow the plan</strong> on the Dashboard or Plan tab \u2014 it tells you exactly what to pay each debt, every month.</li>' +
     '</ol>' +
     '<p class="hint">Type in the boxes \u2014 everything else calculates itself.</p></section>' +
     '<section class="card"><div class="kicker">Questions</div>' + faqs + '</section>' +
@@ -885,8 +885,7 @@ function render() {
     view === 'dashboard' ? vDashboard() :
     view === 'debts' ? vDebts() :
     view === 'paychecks' ? vPaychecks() :
-    view === 'avalanche' ? vSchedule('avalanche') :
-    view === 'snowball' ? vSchedule('snowball') :
+    view === 'plan' ? vSchedule(state.strategy) :
     vStart();
   el.innerHTML = html;
   wire(el);
