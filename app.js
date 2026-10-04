@@ -457,7 +457,7 @@ function renderChrome() {
     html += '<div class="demo-banner">You\u2019re trying the <strong>demo</strong> (3 debts max). ' +
       '<a href="' + DEMO_UPGRADE_URL + '">Get the full version \u2192</a></div>';
   }
-  html += '<header class="app-header"><div class="brand-row"><div class="brand">' + BRAND_SVG + ' ' +
+  html += '<header class="app-header"><div class="brand-row"><div class="brand"><span class="brand-mark"><img src="logo.png" alt="Overtime Money logo"></span> ' +
     '<span>OVERTIME MONEY</span>' + (FULL ? '' : ' <span class="demo-pill">DEMO</span>') + '</div>' +
     '<button class="theme-toggle" id="theme-toggle" aria-label="Toggle light and dark mode">' + MOON_SVG + SUN_SVG + '</button></div>' +
     '<div class="brand-sub">Debt payoff for shift workers</div></header>';
@@ -858,14 +858,15 @@ function vStart() {
   var faqs = FAQS.map(function (f) {
     return '<details class="faq"><summary>' + esc(f[0]) + '</summary><p>' + esc(f[1]) + '</p></details>';
   }).join('');
-  return '<section class="card">' + kh('Start here', 'Three steps, ten minutes, one plan.') + '<h3>3 steps</h3>' +
+  return '<div class="start-grid">' +
+    '<section class="card">' + kh('Start here', 'Three steps, ten minutes, one plan.') + '<h3>3 steps</h3>' +
     '<ol class="steps">' +
     '<li><strong>List your debts</strong> on the Debts tab: nickname, balance, APR, minimum payment.</li>' +
     '<li><strong>Tell it about your paychecks</strong> on the Paychecks tab: your default extra payment, plus a different number for overtime or slow months.</li>' +
     '<li><strong>Follow the plan</strong> on the Dashboard or Plan tab \u2014 it tells you exactly what to pay each debt, every month.</li>' +
     '</ol>' +
     '<p class="hint">Type in the boxes \u2014 everything else calculates itself.</p></section>' +
-    '<section class="card"><div class="kicker">Questions</div>' + faqs + '</section>' +
+    '<section class="card card-questions"><div class="kicker">Questions</div><div class="faqs">' + faqs + '</div></section>' +
     '<section class="card">' + kh('Your data', 'It lives on this device \u2014 back it up any time.') +
     '<div class="btn-row"><button class="btn ghost" id="export-backup">Export backup</button>' +
     '<button class="btn ghost" id="import-backup">Import backup</button></div>' +
@@ -874,7 +875,7 @@ function vStart() {
     (FULL ? '<button class="btn ghost" id="load-sample">Load sample data</button>'
           : '<button class="btn ghost" id="reset-demo">Reset demo data</button>') + '</div>' +
     '<p class="disclaimer">Overtime Money is a planning tool, not financial advice. ' +
-    'Your data never leaves this device except in a backup file you export yourself.</p></section>';
+    'Your data never leaves this device except in a backup file you export yourself.</p></section></div>';
 }
 
 /* ---------------- render + events ---------------- */
