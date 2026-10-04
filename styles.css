@@ -299,8 +299,8 @@ html[data-theme="dark"] .theme-toggle .ico-moon { display: none; }
 }
 .btn.onething-solid:disabled { opacity: 0.35; box-shadow: none; }
 
-/* press-and-hold confirm — the month advance is a deliberate moment */
-.btn.onething-solid.holdbtn {
+/* press-and-hold confirm — month moves are deliberate moments, not accidental taps */
+.btn.holdbtn {
   position: relative; overflow: hidden;
   -webkit-user-select: none; user-select: none; touch-action: none;
 }
