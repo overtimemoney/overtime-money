@@ -299,6 +299,18 @@ html[data-theme="dark"] .theme-toggle .ico-moon { display: none; }
 }
 .btn.onething-solid:disabled { opacity: 0.35; box-shadow: none; }
 
+/* press-and-hold confirm — the month advance is a deliberate moment */
+.btn.onething-solid.holdbtn {
+  position: relative; overflow: hidden;
+  -webkit-user-select: none; user-select: none; touch-action: none;
+}
+.hold-fill {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 0; border-radius: inherit;
+  background: rgba(255, 255, 255, 0.30);
+}
+.holdbtn.holding .hold-fill { width: 100%; transition: width 0.9s linear; }
+.hold-label { position: relative; z-index: 1; }
+
 /* strategy compare */
 .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 6px 0 4px; }
 .compare > div { border-radius: 18px; padding: 16px 14px; }

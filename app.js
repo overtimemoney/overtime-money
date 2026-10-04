@@ -665,11 +665,12 @@ function vDashboard() {
       '<div class="kicker">Your next move</div>' +
       '<p class="onething-line">Put your ' + money(ex) + ' extra toward ' + esc(sched.extraTarget) + '.</p>' +
       '<p class="onething-sub">Month ' + cm + ' \u00B7 ' + esc(sched.label) +
-        ' \u2014 tap \u2713 once these are paid and the plan moves to next month.</p>' +
+        ' \u2014 press and hold \u2713 once these are paid; the plan moves to next month.</p>' +
       '<div class="month-nav">' +
         '<button class="btn small onething-ghost" id="m-back" ' + (cm <= 1 ? 'disabled' : '') + '>\u2190 Back</button>' +
         '<span class="month-ind">Month ' + cm + (maxM ? ' of ' + maxM : '') + '</span>' +
-        '<button class="btn small onething-solid" id="m-fwd" ' + (cm >= maxM ? 'disabled' : '') + '>\u2713 Done \u2014 next month</button>' +
+        '<button class="btn small onething-solid holdbtn" id="m-fwd" ' + (cm >= maxM ? 'disabled' : '') + '>' +
+          '<span class="hold-fill"></span><span class="hold-label">Hold \u2713 \u2014 next month</span></button>' +
       '</div>' +
     '</section>';
   } else {
@@ -906,7 +907,7 @@ function wire(el) {
     var amt = $('#whatif-amt'); if (amt) amt.textContent = '+$' + whatIf + '/mo';
     var res = $('#whatif-result'); if (res) res.innerHTML = whatIfResultHtml(primary());
   });
-  var back = $('#m-back', el), fwd = $('#m-fwd', el);
+  var back = $('#m-back', el);
   if (back) back.addEventListener('click', function () {
     state.currentMonth = Math.max(1, state.currentMonth - 1);
     /* true undo: drop victories logged beyond the new current month */
@@ -918,18 +919,49 @@ function wire(el) {
     });
     save(); render();
   });
-  if (fwd) fwd.addEventListener('click', function () {
-    var r = primary(), maxM = r.debtFreeMonth || r.schedule.length;
-    var doneLabel = ((r.schedule[state.currentMonth - 1] || {}).label || '');
-    state.currentMonth = Math.min(maxM, state.currentMonth + 1);
-    var fresh = logPayoffs();
-    save(); render();
-    if (fresh.length) { showCelebration(fresh); }
-    else {
-      var nextLabel = ((primary().schedule[state.currentMonth - 1] || {}).label || '');
-      toast('\u2713 ' + doneLabel + ' recorded \u2014 now showing ' + nextLabel);
-    }
-  });
+  /* press-and-hold: month advance is deliberate, not tappable by accident */
+  var fwd = $('#m-fwd', el);
+  if (fwd) {
+    var holdTimer = null, holding = false;
+    var doAdvance = function () {
+      var r = primary(), maxM = r.debtFreeMonth || r.schedule.length;
+      if (state.currentMonth >= maxM) return;
+      var doneLabel = ((r.schedule[state.currentMonth - 1] || {}).label || '');
+      state.currentMonth = Math.min(maxM, state.currentMonth + 1);
+      var fresh = logPayoffs();
+      save(); render();
+      if (fresh.length) { showCelebration(fresh); }
+      else {
+        var nextLabel = ((primary().schedule[state.currentMonth - 1] || {}).label || '');
+        toast('\u2713 ' + doneLabel + ' recorded \u2014 now showing ' + nextLabel);
+      }
+    };
+    var startHold = function (e) {
+      if (fwd.disabled || holding) return;
+      if (e && e.preventDefault) e.preventDefault();
+      holding = true;
+      fwd.classList.add('holding');
+      holdTimer = setTimeout(function () {
+        holding = false;
+        fwd.classList.remove('holding');
+        doAdvance();
+      }, 900);
+    };
+    var cancelHold = function () {
+      if (!holding) return;
+      holding = false;
+      clearTimeout(holdTimer);
+      fwd.classList.remove('holding');
+    };
+    fwd.addEventListener('pointerdown', startHold);
+    fwd.addEventListener('pointerup', cancelHold);
+    fwd.addEventListener('pointerleave', cancelHold);
+    fwd.addEventListener('pointercancel', cancelHold);
+    fwd.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doAdvance(); }
+    });
+    fwd.addEventListener('click', function (e) { e.preventDefault(); });
+  }
   /* debts */
   var add = $('#add-debt', el);
   if (add) add.addEventListener('click', function () { openDebtForm(null); });
