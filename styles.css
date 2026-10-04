@@ -469,6 +469,10 @@ input::placeholder { color: var(--muted); opacity: 0.8; }
 }
 .stickybar-inner strong { color: var(--text); font-weight: 700; }
 .stickybar-inner .serif-money { font-size: 14px; color: var(--text); }
+/* auto-hide on scroll down; slides back on scroll up */
+.stickybar { transition: transform 0.28s ease, opacity 0.28s ease; }
+.stickybar.hide { transform: translateY(16px); opacity: 0; }
+.stickybar.hide .stickybar-inner { pointer-events: none; }
 
 /* tab bar — thin-line SVG icons */
 .tabbar {

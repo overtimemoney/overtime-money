@@ -914,7 +914,20 @@ function wire(el) {
   });
 }
 
-document.addEventListener('DOMContentLoaded', function () { applyTheme(currentTheme()); render(); });
+document.addEventListener('DOMContentLoaded', function () {
+  applyTheme(currentTheme()); render();
+  /* hide the status pill while scrolling down; bring it back on scroll up */
+  var lastY = 0;
+  window.addEventListener('scroll', function () {
+    var y = window.scrollY || 0;
+    var bar = document.querySelector('.stickybar');
+    if (bar) {
+      if (y > lastY && y > 140) bar.classList.add('hide');
+      else if (y < lastY) bar.classList.remove('hide');
+    }
+    lastY = y;
+  }, { passive: true });
+});
 
 })();
 
