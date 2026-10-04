@@ -621,6 +621,20 @@ function closeCelebration() {
   var r = document.querySelector('.cel-root');
   if (r) r.parentNode.removeChild(r);
 }
+/* Brief "action confirmed" pill — for month advances without a payoff celebration. */
+function toast(msg) {
+  var old = document.querySelector('.toast');
+  if (old) old.parentNode.removeChild(old);
+  var t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function () { t.classList.add('show'); }, 20);
+  setTimeout(function () {
+    t.classList.remove('show');
+    setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 350);
+  }, 2600);
+}
 function vDashboard() {
   var s = sim();
   if (!state.debts.length) return emptyDebtsHtml('Add your debts to see your payoff plan.');
@@ -651,11 +665,11 @@ function vDashboard() {
       '<div class="kicker">Your next move</div>' +
       '<p class="onething-line">Put your ' + money(ex) + ' extra toward ' + esc(sched.extraTarget) + '.</p>' +
       '<p class="onething-sub">Month ' + cm + ' \u00B7 ' + esc(sched.label) +
-        ' \u2014 then tap \u2713 Payments made.</p>' +
+        ' \u2014 tap \u2713 once these are paid and the plan moves to next month.</p>' +
       '<div class="month-nav">' +
         '<button class="btn small onething-ghost" id="m-back" ' + (cm <= 1 ? 'disabled' : '') + '>\u2190 Back</button>' +
         '<span class="month-ind">Month ' + cm + (maxM ? ' of ' + maxM : '') + '</span>' +
-        '<button class="btn small onething-solid" id="m-fwd" ' + (cm >= maxM ? 'disabled' : '') + '>\u2713 Payments made</button>' +
+        '<button class="btn small onething-solid" id="m-fwd" ' + (cm >= maxM ? 'disabled' : '') + '>\u2713 Done \u2014 next month</button>' +
       '</div>' +
     '</section>';
   } else {
@@ -898,10 +912,15 @@ function wire(el) {
   });
   if (fwd) fwd.addEventListener('click', function () {
     var r = primary(), maxM = r.debtFreeMonth || r.schedule.length;
+    var doneLabel = ((r.schedule[state.currentMonth - 1] || {}).label || '');
     state.currentMonth = Math.min(maxM, state.currentMonth + 1);
     var fresh = logPayoffs();
     save(); render();
-    if (fresh.length) showCelebration(fresh);
+    if (fresh.length) { showCelebration(fresh); }
+    else {
+      var nextLabel = ((primary().schedule[state.currentMonth - 1] || {}).label || '');
+      toast('\u2713 ' + doneLabel + ' recorded \u2014 now showing ' + nextLabel);
+    }
   });
   /* debts */
   var add = $('#add-debt', el);

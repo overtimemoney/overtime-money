@@ -390,6 +390,16 @@ input::placeholder { color: var(--muted); opacity: 0.8; }
 .cel-sub { color: var(--muted); margin: 10px 0 4px; font-size: 0.98rem; }
 .cel-you { font-family: 'Newsreader', Georgia, serif; font-size: 1.3rem; margin: 16px 0 20px; }
 
+/* toast — brief action confirmation above the tab bar */
+.toast {
+  position: fixed; left: 50%; bottom: calc(168px + env(safe-area-inset-bottom)); z-index: 300;
+  transform: translate(-50%, 12px); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease;
+  background: #26263c; color: #fff; padding: 12px 22px; border-radius: 999px;
+  font-size: 14px; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+  max-width: calc(100vw - 48px); text-align: center; pointer-events: none; white-space: nowrap;
+}
+.toast.show { transform: translate(-50%, 0); opacity: 1; }
+
 /* debts — ledger rows with pastel identity dots */
 .debt-card {
   display: flex; align-items: center; gap: 14px;
