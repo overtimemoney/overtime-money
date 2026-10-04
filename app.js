@@ -908,7 +908,15 @@ function wire(el) {
   });
   var back = $('#m-back', el), fwd = $('#m-fwd', el);
   if (back) back.addEventListener('click', function () {
-    state.currentMonth = Math.max(1, state.currentMonth - 1); save(); render();
+    state.currentMonth = Math.max(1, state.currentMonth - 1);
+    /* true undo: drop victories logged beyond the new current month */
+    var r = primary(), cm = state.currentMonth, pmByLabel = {};
+    r.perDebt.forEach(function (pd) { if (pd.payoffLabel) pmByLabel[pd.payoffLabel] = pd.payoffMonth; });
+    state.victories = (state.victories || []).filter(function (v) {
+      var pm = pmByLabel[v.label];
+      return pm == null || pm <= cm;
+    });
+    save(); render();
   });
   if (fwd) fwd.addEventListener('click', function () {
     var r = primary(), maxM = r.debtFreeMonth || r.schedule.length;
