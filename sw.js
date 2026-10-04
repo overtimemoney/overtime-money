@@ -1,6 +1,6 @@
 /* Overtime Money service worker — offline-first PWA.
  * Bump CACHE when shipping changes so clients pick up the new version. */
-var CACHE = 'overtime-money-20261004181852';
+var CACHE = 'overtime-money-20261004182206';
 var FILES = [
   './',
   './index.html',
@@ -17,8 +17,10 @@ var FILES = [
 
 self.addEventListener('install', function (e) {
   e.waitUntil(
-    caches.open(CACHE).then(function (c) { return c.addAll(FILES); })
-      .then(function () { return self.skipWaiting(); })
+    caches.open(CACHE).then(function (c) {
+      /* cache:'reload' bypasses the HTTP cache so an install never pins stale bytes */
+      return c.addAll(FILES.map(function (u) { return new Request(u, { cache: 'reload' }); }));
+    }).then(function () { return self.skipWaiting(); })
   );
 });
 
