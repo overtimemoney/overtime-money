@@ -478,6 +478,70 @@ function renderChrome() {
 }
 
 /* ---------------- views ---------------- */
+
+function r2(n) { return Math.round((+n || 0) * 100) / 100; }
+
+/* Readable, self-documenting backup. Import understands this format and the legacy raw-state format. */
+function buildExport() {
+  var s = sim(), cm = state.currentMonth, sched = s.avalanche.schedule;
+  function summ(r) {
+    return {
+      debtFree: r.debtFreeLabel || 'Beyond 10 years',
+      monthsToDebtFree: r.months,
+      totalInterest: r2(r.totalInterest),
+      totalPaid: r2(r.totalPaid),
+      perDebt: r.perDebt.map(function (p) { return { name: p.name, paidOff: p.payoffLabel || 'Beyond 10 years' }; })
+    };
+  }
+  return {
+    _readme: 'Overtime Money backup \u2014 your plan in readable form. To restore: open the app, go to Start Here, tap Import backup, and choose this file.',
+    app: 'Overtime Money',
+    formatVersion: 2,
+    exportedAt: new Date().toISOString(),
+    strategy: state.strategy,
+    progress: {
+      currentMonth: cm,
+      currentMonthLabel: ((sched[cm - 1] || {}).label || '')
+    },
+    debts: state.debts.map(function (d) {
+      return { name: d.name, balance: r2(d.balance), aprPercent: r2(d.apr), minimumPayment: r2(d.minPay) };
+    }),
+    extraPayments: {
+      defaultPerMonth: r2(parseFloat(state.defaultExtra) || 0),
+      monthlyOverrides: state.overrides || {},
+      _note: 'Month numbers start at 1 = ' + (((sched[0] || {}).label) || 'plan start') + '. Any month not listed uses the default.'
+    },
+    victories: (state.victories || []).map(function (v) {
+      return { name: v.name, paidOff: v.label || '', interestDodgedVsMinimums: r2(v.dodged || 0) };
+    }),
+    planSummary: { avalanche: summ(s.avalanche), snowball: summ(s.snowball) }
+  };
+}
+
+function stateFromBackup(o) {
+  if (!o || typeof o !== 'object') return null;
+  if (o.formatVersion === 2 && Array.isArray(o.debts)) {
+    var xp = o.extraPayments || {};
+    var debts = o.debts.map(function (d) {
+      return { name: String(d.name || 'Debt'), balance: +d.balance || 0, apr: +d.aprPercent || 0, minPay: +d.minimumPayment || 0 };
+    });
+    return normalize({
+      debts: debts,
+      defaultExtra: +(xp.defaultPerMonth || 0),
+      overrides: xp.monthlyOverrides || {},
+      strategy: o.strategy,
+      currentMonth: (o.progress || {}).currentMonth,
+      victories: (o.victories || []).map(function (v) {
+        var nm = String(v.name || 'Debt'), di = -1;
+        for (var i = 0; i < debts.length; i++) if (debts[i].name === nm) { di = i; break; }
+        return { key: nm + '|' + (v.paidOff || ''), name: nm, label: String(v.paidOff || ''),
+                 color: di >= 0 ? debtColorClass(di) : 'dc0', dodged: +v.interestDodgedVsMinimums || 0 };
+      })
+    });
+  }
+  if (Array.isArray(o.debts)) return normalize(o); /* legacy raw-state backup */
+  return null;
+}
 function emptyDebtsHtml(msg) {
   return '<section class="card empty"><p>' + esc(msg) + '</p>' +
     '<button class="btn primary" data-goto="debts">Add your debts</button></section>';
@@ -872,10 +936,11 @@ function wire(el) {
   /* start here: data buttons */
   var ex = $('#export-backup', el);
   if (ex) ex.addEventListener('click', function () {
-    var blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    var blob = new Blob([JSON.stringify(buildExport(), null, 2)], { type: 'application/json' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'overtime-money-backup.json';
+    var dt = new Date(), p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+    a.download = 'overtime-money-backup-' + dt.getFullYear() + p2(dt.getMonth() + 1) + p2(dt.getDate()) + '.json';
     document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.parentNode.removeChild(a); }, 500);
   });
@@ -888,9 +953,9 @@ function wire(el) {
       var rd = new FileReader();
       rd.onload = function () {
         try {
-          var s = JSON.parse(rd.result);
-          if (!s || !Array.isArray(s.debts)) throw new Error('bad file');
-          state = normalize(s); save(); render();
+          var s = stateFromBackup(JSON.parse(rd.result));
+          if (!s) throw new Error('bad file');
+          state = s; save(); render();
         } catch (e) { confirmModal('Import failed', 'That file isn\u2019t a valid Overtime Money backup.', 'OK', function () {}); }
       };
       rd.readAsText(f);
