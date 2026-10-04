@@ -456,31 +456,41 @@ function upgradeNudge() {
 }
 
 /* ---------------- chrome ---------------- */
+function tabBtn(t) {
+  return '<button class="tab' + (view === t[0] ? ' active' : '') + '" data-view="' + t[0] + '">' +
+    '<span class="tab-ico">' + t[1] + '</span><span class="tab-label">' + t[2] + '</span></button>';
+}
+function toggleTheme() {
+  applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+}
 function renderChrome() {
   var root = $('#app-root');
-  var html = '';
+  var main = '';
   if (!FULL) {
-    html += '<div class="demo-banner">You\u2019re trying the <strong>demo</strong> (3 debts max). ' +
+    main += '<div class="demo-banner">You\u2019re trying the <strong>demo</strong> (3 debts max). ' +
       '<a href="' + DEMO_UPGRADE_URL + '">Get the full version \u2192</a></div>';
   }
-  html += '<header class="app-header"><div class="brand-row"><div class="brand"><span class="brand-mark"><img src="logo.png" alt="Overtime Money logo"></span> ' +
+  main += '<header class="app-header"><div class="brand-row"><div class="brand"><span class="brand-mark"><img src="logo.png" alt="Overtime Money logo"></span> ' +
     '<span>OVERTIME MONEY</span>' + (FULL ? '' : ' <span class="demo-pill">DEMO</span>') + '</div>' +
     '<button class="theme-toggle" id="theme-toggle" aria-label="Toggle light and dark mode">' + MOON_SVG + SUN_SVG + '</button></div>' +
     '<div class="brand-sub">Debt payoff for shift workers</div></header>';
-  html += '<main id="view"></main>';
-  html += '<nav class="tabbar">' + TABS.map(function (t) {
-    return '<button class="tab' + (view === t[0] ? ' active' : '') + '" data-view="' + t[0] + '">' +
-      '<span class="tab-ico">' + t[1] + '</span><span class="tab-label">' + t[2] + '</span></button>';
-  }).join('') + '</nav>';
-  html += '<div class="stickybar"><div class="stickybar-inner">' + footerHtml() + '</div></div>';
-  root.innerHTML = html;
+  main += '<div class="topbar"><button class="theme-toggle" id="theme-toggle-2" aria-label="Toggle light and dark mode">' + MOON_SVG + SUN_SVG + '</button>' +
+    '<button class="btn primary topbar-cta" id="topbar-add">+ Add debt</button></div>';
+  main += '<main id="view"></main>';
+  var side = '<nav class="tabbar"><div class="side-logo"><img src="logo.png" alt="Overtime Money"></div>' +
+    '<div class="side-group"><div class="side-label">Getting started</div>' + tabBtn(TABS[0]) + '</div>' +
+    '<div class="side-group"><div class="side-label">Your plan</div>' + TABS.slice(1).map(tabBtn).join('') + '</div></nav>';
+  root.innerHTML = '<div class="main-col">' + main + '</div>' + side +
+    '<div class="stickybar"><div class="stickybar-inner">' + footerHtml() + '</div></div>';
   $all('.tab', root).forEach(function (b) {
     b.addEventListener('click', function () { view = b.getAttribute('data-view'); render(); window.scrollTo(0, 0); });
   });
   var tt = document.getElementById('theme-toggle');
-  if (tt) tt.addEventListener('click', function () {
-    applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
-  });
+  if (tt) tt.addEventListener('click', toggleTheme);
+  var tt2 = document.getElementById('theme-toggle-2');
+  if (tt2) tt2.addEventListener('click', toggleTheme);
+  var addBtn = document.getElementById('topbar-add');
+  if (addBtn) addBtn.addEventListener('click', function () { view = 'debts'; render(); openDebtForm(null); });
 }
 
 /* ---------------- views ---------------- */
@@ -1070,9 +1080,9 @@ document.addEventListener('DOMContentLoaded', function () {
       if (y > lastY && y > 140) bar.classList.add('hide');
       else if (y < lastY) bar.classList.remove('hide');
     }
-    /* desktop: shrink the top nav pill once scrolled past it */
+    /* below desktop: shrink the top nav pill once scrolled past it */
     var tabs = document.querySelector('.tabbar');
-    if (tabs) tabs.classList.toggle('compact', y > 160);
+    if (tabs) tabs.classList.toggle('compact', y > 160 && window.innerWidth < 900);
     lastY = y;
   }, { passive: true });
 });
