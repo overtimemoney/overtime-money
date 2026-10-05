@@ -326,9 +326,13 @@ html[data-theme="dark"] .theme-toggle .ico-moon { display: none; }
 .compare > div { border-radius: 18px; padding: 16px 14px; }
 .compare > div:first-child { background: var(--av-bg); }
 .compare > div:last-child { background: var(--sn-bg); }
-.compare span { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
-.compare > div:first-child span { color: var(--av-text); }
-.compare > div:last-child span { color: var(--sn-text); }
+.compare > div > span { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.compare > div:first-child > span { color: var(--av-text); }
+.compare > div:last-child > span { color: var(--sn-text); }
+.compare strong .serif-money { white-space: nowrap; }
+/* keep the small $ and cents in the card's theme color */
+.compare > div:first-child strong .m-cur, .compare > div:first-child strong .m-cents { color: var(--av-text); }
+.compare > div:last-child strong .m-cur, .compare > div:last-child strong .m-cents { color: var(--sn-text); }
 .compare strong { display: block; margin: 6px 0 2px; color: var(--text); }
 .compare strong .serif-money { font-size: 20px; }
 .compare em { font-style: normal; font-size: 13px; color: var(--muted); }
