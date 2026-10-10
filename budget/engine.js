@@ -78,6 +78,7 @@ function dueDateInMonth(dueDay, mkey) {
 function defaultState() {
   return {
     version: 1,
+    userName: '',     /* what we call you in greetings */
     incomes: [],       /* {id, name, amount, month:'YYYY-MM'} */
     categories: [],    /* {id, name, budgeted, rollover:bool} */
     transactions: [],  /* {id, date:'YYYY-MM-DD', type:'income'|'expense', categoryId|null, amount, note} */

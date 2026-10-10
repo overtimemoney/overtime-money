@@ -65,7 +65,8 @@ function normalize(s) {
   var d = E.defaultState(), out = {};
   if (!s || typeof s !== 'object') s = {};
   Object.keys(d).forEach(function (k) {
-    out[k] = Array.isArray(s[k]) ? s[k] : d[k];
+    if (Array.isArray(d[k])) out[k] = Array.isArray(s[k]) ? s[k] : d[k];
+    else out[k] = (s[k] == null) ? d[k] : s[k];
   });
   out.version = 1;
   return out;
@@ -275,6 +276,10 @@ function vStart() {
     '<p class="hint">Ten minutes to set up. After that it\u2019s just logging what you spend.</p>' +
     '<div class="btn-row"><button class="btn primary" id="load-sample">Load sample month</button>' +
     '<button class="btn ghost" id="start-blank">Start blank</button></div></section>' +
+    '<section class="card"><div class="kicker">About you</div>' +
+    '<label class="field"><span>What should we call you?</span>' +
+    '<input type="text" id="user-name" maxlength="30" value="' + esc(state.userName || '') + '" placeholder="Your first name"></label>' +
+    '<p class="hint">Shows up in your greeting on Home. That\u2019s all it\u2019s used for.</p></section>' +
     '<section class="card card-questions"><div class="kicker">Questions</div><div class="faqs">' + faqs + '</div></section>' +
     '<section class="card">' + kh('Your data', 'It stays on this device \u2014 back it up any time.') +
     '<div class="btn-row"><button class="btn ghost" id="export-backup">Export backup</button>' +
@@ -340,6 +345,17 @@ function billMini(b, st, idx) {
     '<button class="btn small ghost pay-toggle" data-paybill="' + idx + '">' + (st === 'paid' ? 'Undo' : 'Mark paid') + '</button>' +
     '</div>';
 }
+/* time-of-day greeting for the Home tab */
+function dayGreeting() {
+  var h = new Date().getHours();
+  if (h >= 5 && h < 12) return 'Good morning';
+  if (h >= 12 && h < 17) return 'Good afternoon';
+  return 'Good night';
+}
+function greetHtml() {
+  var nm = (state.userName || '').trim();
+  return '<div class="view-head"><h2>' + esc(dayGreeting() + (nm ? ', ' + nm : '')) + '</h2></div>';
+}
 function vDashboard() {
   var s = E.monthSummary(state, viewMonth);
   var today = new Date();
@@ -354,7 +370,7 @@ function vDashboard() {
       s.net >= 0 ? 'Money still working for you.' : 'Over budget \u2014 no shame, just data.',
       s.net >= 0 ? 'good' : 'warn') +
     '</div>';
-  var body = monthNav() + hero + spendDonut(s);
+  var body = greetHtml() + monthNav() + hero + spendDonut(s);
   /* bills needing attention */
   var attn = [];
   state.bills.forEach(function (b, i) {
@@ -391,7 +407,7 @@ function vDashboard() {
       '<button class="btn ghost" data-goto="goals" style="margin-top:8px">Open Goals</button></section>';
   }
   if (!state.incomes.length && !state.categories.length) {
-    body = monthNav() + '<section class="card empty"><p>Your budget is a blank slate. Add your income and a few categories to get started.</p>' +
+    body = greetHtml() + monthNav() + '<section class="card empty"><p>Your budget is a blank slate. Add your income and a few categories to get started.</p>' +
       '<button class="btn primary" data-goto="budget">Set up your budget</button></section>';
   }
   return body;
@@ -1002,6 +1018,13 @@ function wire(el) {
         function () { state.transactions.splice(i, 1); save(); render(); });
     });
   });
+  /* tap a transaction title to reveal the full title (toggles) */
+  $all('.tx-name', el).forEach(function (n) {
+    n.addEventListener('click', function () {
+      var row = n.closest('.tx-row');
+      if (row) row.classList.toggle('expanded');
+    });
+  });
 
   /* bills */
   $all('#add-bill,#add-bill-2', el).forEach(function (b) {
@@ -1097,6 +1120,8 @@ function wire(el) {
   if (ls) ls.addEventListener('click', loadSample);
   var sb = $('#start-blank', el);
   if (sb) sb.addEventListener('click', startBlank);
+  var un = $('#user-name', el);
+  if (un) un.addEventListener('input', function () { state.userName = un.value; save(); });
   var ex = $('#export-backup', el);
   if (ex) ex.addEventListener('click', function () {
     var dt = new Date(), p2 = function (n) { return (n < 10 ? '0' : '') + n; };

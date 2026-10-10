@@ -728,7 +728,9 @@ html[data-theme="dark"] .link-btn { color: var(--accent); }
   color: var(--dc, var(--accent-strong)); display: flex; align-items: center; justify-content: center; flex: none; }
 .tx-ico svg { width: 20px; height: 20px; }
 .tx-main { flex: 1; min-width: 0; }
-.tx-name { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-name { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+/* tap the title to reveal it in full */
+.tx-row.expanded .tx-name { white-space: normal; overflow: visible; }
 .tx-sub { font-size: 12.5px; color: var(--muted); }
 .tx-amt { font-family: 'Newsreader', Georgia, serif; font-weight: 600; font-size: 18px; white-space: nowrap; }
 .tx-amt.out { color: var(--header-text); }
