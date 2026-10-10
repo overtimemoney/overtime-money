@@ -1,4 +1,4 @@
-/* Overtime Money Budget — engine (pure logic, no DOM).
+/* Overtime Budget — engine (pure logic, no DOM).
  * UMD: module.exports for node tests, window.BudgetEngine in the browser.
  * All money math rounds to cents with r2(). Dates are local-time.
  */

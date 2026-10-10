@@ -1,5 +1,5 @@
 /* =========================================================================
- * Overtime Money Budget — UI layer (app.js)
+ * Overtime Budget — UI layer (app.js)
  *
  * Renders the budgeting PWA for anyone with irregular income on top of the
  * pure-logic engine (window.BudgetEngine). Plain scripts only — no modules,
@@ -225,8 +225,8 @@ function renderChrome() {
       '<a href="' + DEMO_UPGRADE_URL + '">Get the full version \u2192</a></div>';
   }
   main += '<header class="app-header"><div class="brand-row"><div class="brand">' +
-    '<span class="brand-mark"><img src="logo.png" alt="Overtime Money logo"></span> ' +
-    '<span>OVERTIME MONEY</span>' + (FULL ? '' : ' <span class="demo-pill">DEMO</span>') + '</div>' +
+    '<span class="brand-mark"><img src="logo.png" alt="Overtime Budget logo"></span> ' +
+    '<span>OVERTIME BUDGET</span>' + (FULL ? '' : ' <span class="demo-pill">DEMO</span>') + '</div>' +
     '<button class="theme-toggle" id="theme-toggle" aria-label="Toggle light and dark mode">' + MOON_SVG + SUN_SVG + '</button></div>' +
     '<div class="brand-sub">Budgeting for real life</div></header>';
   main += '<div class="topbar"><button class="theme-toggle" id="theme-toggle-2" aria-label="Toggle light and dark mode">' +
@@ -288,7 +288,7 @@ function vStart() {
     '<div class="btn-row"><button class="btn ghost" id="export-csv">Export transactions CSV</button>' +
     '<button class="btn danger-ghost" id="reset-data">' + (FULL ? 'Reset all data' : 'Reset demo data') + '</button></div>' +
     '<p class="disclaimer">Everything you enter lives only in this browser on this device. Nothing is uploaded or synced. ' +
-    'Overtime Money Budget is a planning tool, not financial advice.</p></section></div>';
+    'Overtime Budget is a planning tool, not financial advice.</p></section></div>';
 }
 
 /* ---- dashboard ---- */
@@ -862,8 +862,8 @@ function openAssetForm(kind, idx) { /* kind: 'asset' | 'liab' */
 /* ---------------- data actions ---------------- */
 function buildExport() {
   return {
-    _readme: 'Overtime Money Budget backup \u2014 restore via Start \u2192 Import backup.',
-    app: 'Overtime Money Budget',
+    _readme: 'Overtime Budget backup \u2014 restore via Start \u2192 Import backup.',
+    app: 'Overtime Budget',
     formatVersion: 1,
     exportedAt: new Date().toISOString(),
     state: state
@@ -1143,7 +1143,7 @@ function wire(el) {
           view = hasData(state) ? 'dashboard' : 'start';
           viewMonth = E.monthKeyOf(new Date()); txMonth = viewMonth; render();
         } catch (e) {
-          infoModal('Import failed', 'That file isn\u2019t a valid Overtime Money Budget backup.');
+          infoModal('Import failed', 'That file isn\u2019t a valid Overtime Budget backup.');
         }
       };
       rd.readAsText(f);
