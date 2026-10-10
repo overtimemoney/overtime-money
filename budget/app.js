@@ -50,7 +50,7 @@ var ICONS = {
 var ARROW_DOWN = SVG_OPEN + '<path d="M12 5v13"/><path d="M6.5 12.5L12 18l5.5-5.5"/></svg>';
 var ARROW_UP = SVG_OPEN + '<path d="M12 19V6"/><path d="M6.5 11.5L12 6l5.5 5.5"/></svg>';
 var TABS = [
-  ['start', ICONS.start, 'Start Here'],
+  ['start', ICONS.start, 'Start'],
   ['dashboard', ICONS.home, 'Home'],
   ['budget', ICONS.budget, 'Budget'],
   ['transactions', ICONS.spending, 'Spending'],
@@ -862,7 +862,7 @@ function openAssetForm(kind, idx) { /* kind: 'asset' | 'liab' */
 /* ---------------- data actions ---------------- */
 function buildExport() {
   return {
-    _readme: 'Overtime Money Budget backup \u2014 restore via Start Here \u2192 Import backup.',
+    _readme: 'Overtime Money Budget backup \u2014 restore via Start \u2192 Import backup.',
     app: 'Overtime Money Budget',
     formatVersion: 1,
     exportedAt: new Date().toISOString(),

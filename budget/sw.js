@@ -1,6 +1,6 @@
 /* Overtime Money Budget service worker — offline-first PWA.
  * Bump CACHE when shipping changes so clients pick up the new version. */
-var CACHE = 'om-budget-20261010173707';
+var CACHE = 'om-budget-20261010174536';
 var FILES = [
   './',
   './index.html',
