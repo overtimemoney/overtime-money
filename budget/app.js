@@ -633,10 +633,11 @@ function infoModal(title, body) {
     '<div class="modal-actions"><button class="btn primary" id="m-cancel">OK</button></div>');
   wireFormCancel();
 }
-function textField(id, label, value, placeholder) {
+function textField(id, label, value, placeholder, numeric) {
   return '<label class="field"><span>' + esc(label) + '</span>' +
     '<input type="text" id="' + id + '" value="' + esc(value == null ? '' : value) + '"' +
-    (placeholder ? ' placeholder="' + esc(placeholder) + '"' : '') + ' inputmode="decimal"></label>';
+    (placeholder ? ' placeholder="' + esc(placeholder) + '"' : '') +
+    (numeric ? ' inputmode="decimal"' : '') + '></label>';
 }
 
 function openIncomeForm(idx) {
@@ -647,8 +648,8 @@ function openIncomeForm(idx) {
   openModal(formShell(idx == null ? 'Add income' : 'Edit income',
     '<p class="hint">One entry per paycheck \u2014 base pay, overtime, side gigs, per-diems. It lands in ' +
     esc(E.monthLabel(viewMonth)) + '.</p>' +
-    textField('f-name', 'Name', inc && inc.name, 'Base pay (nights)') +
-    textField('f-amount', 'Amount', inc && inc.amount, '$3,400.00')));
+    textField('f-name', 'Name', inc && inc.name, 'Base pay') +
+    textField('f-amount', 'Amount', inc && inc.amount, '$3,400.00', true)));
   wireFormCancel();
   $('#m-save').addEventListener('click', function () {
     var name = fieldVal('f-name').trim() || 'Income';
@@ -668,7 +669,7 @@ function openCatForm(id) {
   if (!c && capHit('category', state.categories.length, CAP.categories, 'budget categories')) return;
   openModal(formShell(c ? 'Edit category' : 'Add category',
     textField('f-name', 'Name', c && c.name, 'Groceries') +
-    '<div class="form-grid"><div>' + textField('f-budget', 'Monthly budget', c && c.budgeted, '$450.00') + '</div>' +
+    '<div class="form-grid"><div>' + textField('f-budget', 'Monthly budget', c && c.budgeted, '$450.00', true) + '</div>' +
     '<div><label class="check-row" style="margin-top:34px"><input type="checkbox" id="f-rollover"' +
     (c && c.rollover ? ' checked' : '') + '> Carry unspent into next month</label></div></div>' +
     '<p class="hint">Carry-over adds last month\u2019s unspent budget (never below zero) to this month\u2019s available amount \u2014 one month deep.</p>'));
@@ -700,7 +701,7 @@ function openTxForm(idx) {
     '<option value="income"' + (isIncome ? ' selected' : '') + '>Income</option></select></label></div></div>' +
     '<div id="t-catwrap"><label class="field"><span>Category</span><select id="t-cat" style="' + INPUT_STYLE + '">' +
     catOpts + '</select></label></div>' +
-    textField('t-amount', 'Amount', t && t.amount, '$42.00') +
+    textField('t-amount', 'Amount', t && t.amount, '$42.00', true) +
     '<label class="field"><span>Note (optional)</span><input type="text" id="t-note" value="' +
     esc(t && t.note) + '" placeholder="Weekly shop"></label>'));
   wireFormCancel();
@@ -737,7 +738,7 @@ function openBillForm(idx) {
   if (idx == null && capHit('bill', state.bills.length, CAP.bills, 'bills')) return;
   openModal(formShell(b ? 'Edit bill' : 'Add bill',
     textField('f-name', 'Name', b && b.name, 'Electric') +
-    '<div class="form-grid"><div>' + textField('f-amount', 'Amount', b && b.amount, '$95.00') + '</div>' +
+    '<div class="form-grid"><div>' + textField('f-amount', 'Amount', b && b.amount, '$95.00', true) + '</div>' +
     '<div><label class="field"><span>Due day (1\u201331)</span>' +
     '<input type="number" id="f-day" min="1" max="31" value="' + esc(b ? b.dueDay : 1) + '"></label></div></div>' +
     '<label class="check-row"><input type="checkbox" id="f-autopay"' + (b && b.autopay ? ' checked' : '') +
@@ -762,7 +763,7 @@ function openGoalForm(idx) {
   if (idx == null && capHit('goal', state.goals.length, CAP.goals, 'goals')) return;
   openModal(formShell(g ? 'Edit goal' : 'Add goal',
     textField('f-name', 'Name', g && g.name, 'Emergency fund') +
-    '<div class="form-grid"><div>' + textField('f-target', 'Target', g && g.target, '$3,000.00') + '</div>' +
+    '<div class="form-grid"><div>' + textField('f-target', 'Target', g && g.target, '$3,000.00', true) + '</div>' +
     '<div><label class="field"><span>Deadline (optional)</span>' +
     '<input type="date" id="f-deadline" value="' + esc(g && g.deadline) + '" style="' + INPUT_STYLE + '"></label></div></div>'));
   wireFormCancel();
@@ -785,7 +786,7 @@ function openContribForm(goalId, dir) {
   var g = state.goals[gi], adding = dir > 0;
   openModal(formShell(adding ? 'Add money' : 'Take out',
     '<p class="hint">' + esc(g.name) + ' \u2014 ' + money(E.goalStats(g).saved) + ' saved so far.</p>' +
-    textField('f-amount', 'Amount', '', adding ? '$250.00' : '$50.00') +
+    textField('f-amount', 'Amount', '', adding ? '$250.00' : '$50.00', true) +
     '<label class="field"><span>Note (optional)</span><input type="text" id="f-note" placeholder="' +
     esc(adding ? 'Bonus' : 'Covered a bill') + '"></label>',
     adding ? 'Add it' : 'Take it out'));
@@ -804,9 +805,9 @@ function openDebtForm(idx) {
   if (idx == null && capHit('debt', state.debts.length, CAP.debts, 'debts')) return;
   openModal(formShell(d ? 'Edit debt' : 'Add debt',
     textField('f-name', 'Name', d && d.name, 'Travel card') +
-    '<div class="form-grid"><div>' + textField('f-balance', 'Balance', d && d.balance, '$2,400.00') + '</div>' +
-    '<div>' + textField('f-apr', 'APR %', d && d.apr, '24.99') + '</div></div>' +
-    textField('f-minpay', 'Minimum payment', d && d.minPay, '$60.00') +
+    '<div class="form-grid"><div>' + textField('f-balance', 'Balance', d && d.balance, '$2,400.00', true) + '</div>' +
+    '<div>' + textField('f-apr', 'APR %', d && d.apr, '24.99', true) + '</div></div>' +
+    textField('f-minpay', 'Minimum payment', d && d.minPay, '$60.00', true) +
     '<p class="hint">A light snapshot \u2014 the full payoff plan lives in the Overtime Money debt app.</p>'));
   wireFormCancel();
   $('#m-save').addEventListener('click', function () {
@@ -831,7 +832,7 @@ function openAssetForm(kind, idx) { /* kind: 'asset' | 'liab' */
   var a = idx == null ? null : list[idx];
   openModal(formShell((a ? 'Edit ' : 'Add ') + (kind === 'asset' ? 'asset' : 'liability'),
     textField('f-name', 'Name', a && a.name, kind === 'asset' ? 'Checking' : 'Travel card') +
-    textField('f-value', 'Value', a && a.value, '$2,350.00')));
+    textField('f-value', 'Value', a && a.value, '$2,350.00', true)));
   wireFormCancel();
   $('#m-save').addEventListener('click', function () {
     var rec = { id: a ? a.id : E.uid(kind === 'asset' ? 'a' : 'l'),
