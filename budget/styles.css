@@ -674,6 +674,9 @@ input::placeholder { color: var(--muted); opacity: 0.8; }
 .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0 0 16px; }
 .stat-card { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius);
   box-shadow: var(--card-shadow); padding: 16px 14px; }
+.stat-card[data-goto] { cursor: pointer; }
+.stat-card[data-goto]:hover { border-color: var(--accent); }
+.stat-card[data-goto]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .stat-card .kpi-label { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
   color: var(--kicker); margin-bottom: 6px; }
 .stat-card .kpi-value { font-family: 'Newsreader', Georgia, serif; font-weight: 600; font-size: 30px;

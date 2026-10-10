@@ -100,14 +100,13 @@ function sampleState() {
     { id: 'c-rent', name: 'Rent', budgeted: 1650, rollover: false },
     { id: 'c-groc', name: 'Groceries', budgeted: 450, rollover: true },
     { id: 'c-trans', name: 'Transport', budgeted: 220, rollover: true },
-    { id: 'c-gear', name: 'Scrubs & gear', budgeted: 120, rollover: true },
     { id: 'c-fun', name: 'Fun money', budgeted: 180, rollover: true }
   ];
   return {
     version: 1,
     incomes: [
-      { id: 'i-base', name: 'Base pay (nights)', amount: 3400, month: cur },
-      { id: 'i-ot', name: 'Overtime — 3 shifts', amount: 810, month: cur }
+      { id: 'i-base', name: 'Base pay', amount: 3400, month: cur },
+      { id: 'i-ot', name: 'Overtime', amount: 810, month: cur }
     ],
     categories: cats,
     transactions: [
@@ -124,7 +123,7 @@ function sampleState() {
     ],
     goals: [
       { id: 'g-em', name: 'Emergency fund', target: 3000, deadline: null, saved: 750,
-        log: [{ id: 'gl-1', date: d2, amount: 250, note: 'Overtime shift' }] }
+        log: [{ id: 'gl-1', date: d2, amount: 250, note: 'Extra income' }] }
     ],
     debts: [
       { id: 'd-1', name: 'Travel card', balance: 2400, apr: 24.99, minPay: 60 }

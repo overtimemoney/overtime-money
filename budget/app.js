@@ -1,7 +1,7 @@
 /* =========================================================================
  * Overtime Money Budget — UI layer (app.js)
  *
- * Renders the budgeting PWA for nurses and shift workers on top of the
+ * Renders the budgeting PWA for anyone with irregular income on top of the
  * pure-logic engine (window.BudgetEngine). Plain scripts only — no modules,
  * no fetch, no CDN; works from file://.
  *
@@ -227,7 +227,7 @@ function renderChrome() {
     '<span class="brand-mark"><img src="logo.png" alt="Overtime Money logo"></span> ' +
     '<span>OVERTIME MONEY</span>' + (FULL ? '' : ' <span class="demo-pill">DEMO</span>') + '</div>' +
     '<button class="theme-toggle" id="theme-toggle" aria-label="Toggle light and dark mode">' + MOON_SVG + SUN_SVG + '</button></div>' +
-    '<div class="brand-sub">Budgeting for shift workers</div></header>';
+    '<div class="brand-sub">Budgeting for real life</div></header>';
   main += '<div class="topbar"><button class="theme-toggle" id="theme-toggle-2" aria-label="Toggle light and dark mode">' +
     MOON_SVG + SUN_SVG + '</button>' +
     '<button class="btn primary topbar-cta" id="topbar-add">+ Add</button></div>';
@@ -252,7 +252,7 @@ function renderChrome() {
 
 var FAQS = [
   ['My paycheck is different every month. Will this work?',
-   'Yes \u2014 that\u2019s the whole point. Add an income entry for every paycheck: base pay, each overtime shift, per-diems. The month\u2019s total is what you budget against, and slow months and overtime months each get their own numbers.'],
+   'Yes \u2014 that\u2019s the whole point. Add an income entry for every paycheck: base pay, overtime, side gigs, per-diems. The month\u2019s total is what you budget against, and slow months and busy months each get their own numbers.'],
   ['What does \u201ccarry unspent\u201d do?',
    'Tick it on a category like Groceries and any unspent budget rolls into next month\u2019s available amount \u2014 one month deep, so there\u2019s no snowballing slush fund. Fixed bills like rent don\u2019t need it.'],
   ['Is my data private?',
@@ -266,10 +266,10 @@ function vStart() {
     return '<details class="faq"><summary>' + esc(f[0]) + '</summary><p>' + esc(f[1]) + '</p></details>';
   }).join('');
   return '<div class="start-grid">' +
-    '<section class="card">' + kh('Welcome', 'A budget that keeps up with shift work.') + '<h3>How it works</h3>' +
+    '<section class="card">' + kh('Welcome', 'A budget that keeps up with real paychecks.') + '<h3>How it works</h3>' +
     '<ol class="steps">' +
-    '<li><strong>Add your income</strong> for the month \u2014 base pay plus every overtime shift. Irregular paychecks are the whole point.</li>' +
-    '<li><strong>Give every dollar a job</strong> in budget categories: rent, groceries, scrubs, fun money. Your spending gets logged against them.</li>' +
+    '<li><strong>Add your income</strong> for the month \u2014 base pay plus every extra dollar. Irregular paychecks welcome.</li>' +
+    '<li><strong>Give every dollar a job</strong> in budget categories: rent, groceries, fun money. Your spending gets logged against them.</li>' +
     '<li><strong>Watch the month unfold</strong> on Home: what\u2019s spent, what\u2019s left, which bills are coming due, and how your goals are growing.</li>' +
     '</ol>' +
     '<p class="hint">Ten minutes to set up. After that it\u2019s just logging what you spend.</p>' +
@@ -287,8 +287,8 @@ function vStart() {
 }
 
 /* ---- dashboard ---- */
-function statCard(label, value, sub, cls) {
-  return '<div class="stat-card' + (cls ? ' ' + cls : '') + '"><div class="kpi-label">' + esc(label) + '</div>' +
+function statCard(label, value, sub, cls, goto) {
+  return '<div class="stat-card' + (cls ? ' ' + cls : '') + '"' + (goto ? ' data-goto="' + goto + '" role="link" tabindex="0"' : '') + '><div class="kpi-label">' + esc(label) + '</div>' +
     '<div class="kpi-value">' + value + '</div>' +
     (sub ? '<div class="kpi-sub">' + esc(sub) + '</div>' : '') + '</div>';
 }
@@ -346,7 +346,7 @@ function vDashboard() {
   var hero = '<div class="stat-grid">' +
     statCard('Income', money(s.totalIncome),
       s.incomes.length ? s.incomes.length + (s.incomes.length === 1 ? ' source' : ' sources') : 'Add your paychecks',
-      '') +
+      '', 'budget') +
     statCard('Spent', money(s.totalSpent),
       s.categories.length ? 'across ' + s.categories.length + (s.categories.length === 1 ? ' category' : ' categories') : 'No categories yet',
       '') +
@@ -378,7 +378,7 @@ function vDashboard() {
   /* goals mini */
   if (!state.goals.length) {
     body += '<section class="card">' + kh('Goals', 'Give your savings a name.') +
-      '<p class="dim">Emergency fund, vacation, new scrubs \u2014 set a target and watch it fill up.</p>' +
+      '<p class="dim">Emergency fund, vacation, a new laptop \u2014 set a target and watch it fill up.</p>' +
       '<button class="btn primary" data-goto="goals">Set a goal</button></section>';
   } else {
     body += '<section class="card">' + kh('Goals', 'Your savings, at a glance.') +
@@ -437,7 +437,7 @@ function vBudget() {
     '<button class="btn ghost" id="copy-income">Copy last month</button></div></section>';
   body += '<div class="sec-title"><h3>Categories</h3></div>';
   if (!s.categories.length) {
-    body += '<section class="card empty"><p>No categories yet. Rent, groceries, scrubs, fun money \u2014 give every dollar a job.</p>' +
+    body += '<section class="card empty"><p>No categories yet. Rent, groceries, fun money \u2014 give every dollar a job.</p>' +
       '<button class="btn primary" id="add-category">Add a category</button></section>';
   } else {
     body += s.categories.map(catCard).join('') +
@@ -548,7 +548,7 @@ function vGoals() {
     '<button class="btn primary" id="add-goal" style="margin-bottom:12px">Add a goal</button>' +
     (state.goals.length
       ? state.goals.map(goalCard).join('')
-      : '<section class="card empty"><p>No goals yet. An emergency fund, a vacation, new scrubs \u2014 give your savings a name and a target.</p>' +
+      : '<section class="card empty"><p>No goals yet. An emergency fund, a vacation, a new laptop \u2014 give your savings a name and a target.</p>' +
         '<button class="btn primary" id="add-goal-2">Set your first goal</button></section>');
 }
 
@@ -645,7 +645,7 @@ function openIncomeForm(idx) {
       state.incomes.filter(function (i) { return i.month === viewMonth; }).length,
       CAP.incomes, 'income entries per month')) return;
   openModal(formShell(idx == null ? 'Add income' : 'Edit income',
-    '<p class="hint">One entry per paycheck \u2014 base pay, each overtime shift, per-diems. It lands in ' +
+    '<p class="hint">One entry per paycheck \u2014 base pay, overtime, side gigs, per-diems. It lands in ' +
     esc(E.monthLabel(viewMonth)) + '.</p>' +
     textField('f-name', 'Name', inc && inc.name, 'Base pay (nights)') +
     textField('f-amount', 'Amount', inc && inc.amount, '$3,400.00')));
@@ -787,7 +787,7 @@ function openContribForm(goalId, dir) {
     '<p class="hint">' + esc(g.name) + ' \u2014 ' + money(E.goalStats(g).saved) + ' saved so far.</p>' +
     textField('f-amount', 'Amount', '', adding ? '$250.00' : '$50.00') +
     '<label class="field"><span>Note (optional)</span><input type="text" id="f-note" placeholder="' +
-    esc(adding ? 'Overtime shift' : 'Covered a bill') + '"></label>',
+    esc(adding ? 'Bonus' : 'Covered a bill') + '"></label>',
     adding ? 'Add it' : 'Take it out'));
   wireFormCancel();
   $('#m-save').addEventListener('click', function () {
@@ -912,6 +912,11 @@ function render() {
   wire(el);
   $all('[data-goto]', el).forEach(function (b) {
     b.addEventListener('click', function () { view = b.getAttribute('data-goto'); render(); window.scrollTo(0, 0); });
+    if (b.getAttribute('role') === 'link') {
+      b.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.click(); }
+      });
+    }
   });
 }
 
