@@ -717,6 +717,16 @@ function vDashboard() {
   var dfLabel = r.debtFreeLabel || 'Beyond 30 years';
   var maxM = r.debtFreeMonth || r.schedule.length;
 
+  /* Month stepper is shared by both branches: a $0-extra month must not
+     hide the only way to advance to the next month. */
+  var monthNav = sched ?
+    '<div class="month-nav">' +
+      '<button class="btn small onething-ghost holdbtn" id="m-back" ' + (cm <= 1 ? 'disabled' : '') + '>' +
+        '<span class="hold-fill"></span><span class="hold-label">Hold \u2190 last\u00A0month</span></button>' +
+      '<span class="month-ind">Month ' + cm + (maxM ? ' of ' + maxM : '') + '</span>' +
+      '<button class="btn small onething-solid holdbtn" id="m-fwd" ' + (cm >= maxM ? 'disabled' : '') + '>' +
+        '<span class="hold-fill"></span><span class="hold-label">Hold \u2713 next\u00A0month</span></button>' +
+    '</div>' : '';
   var oneThing;
   if (sched && sched.extraTarget && ex > 0) {
     oneThing =
@@ -725,20 +735,16 @@ function vDashboard() {
       '<p class="onething-line">Put your ' + money(ex) + ' extra toward ' + esc(sched.extraTarget) + '.</p>' +
       '<p class="onething-sub">Month ' + cm + ' \u00B7 ' + esc(sched.label) + ' \u2014 ' + esc(stratName(state.strategy)) +
         ' plan \u00B7 press and hold: \u2713 advances when these are paid, \u2190 goes back.</p>' +
-      '<div class="month-nav">' +
-        '<button class="btn small onething-ghost holdbtn" id="m-back" ' + (cm <= 1 ? 'disabled' : '') + '>' +
-          '<span class="hold-fill"></span><span class="hold-label">Hold \u2190 last\u00A0month</span></button>' +
-        '<span class="month-ind">Month ' + cm + (maxM ? ' of ' + maxM : '') + '</span>' +
-        '<button class="btn small onething-solid holdbtn" id="m-fwd" ' + (cm >= maxM ? 'disabled' : '') + '>' +
-          '<span class="hold-fill"></span><span class="hold-label">Hold \u2713 next\u00A0month</span></button>' +
-      '</div>' +
+      monthNav +
     '</section>';
   } else {
     oneThing =
     '<section class="card onething">' +
       '<div class="kicker">Your next move</div>' +
       '<p class="onething-line">Add an extra payment to accelerate.</p>' +
-      '<p class="onething-sub">Even a little extra each month moves your debt-free date closer.</p>' +
+      '<p class="onething-sub">Even a little extra each month moves your debt-free date closer. ' +
+        'Press and hold \u2713 when this month\u2019s payments are done.</p>' +
+      monthNav +
       '<button class="btn small onething-solid" data-goto="paychecks">Set it on Paychecks</button>' +
     '</section>';
   }
