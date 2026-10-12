@@ -243,7 +243,7 @@ if (typeof module !== 'undefined' && module.exports) {
 if (typeof document === 'undefined' || typeof window === 'undefined' || !window.OvertimeEngine) return;
 
 var FULL = window.OVERTIME_FULL === true;
-var DEMO_UPGRADE_URL = '#'; /* TODO: replace with the Etsy listing URL for the full version */
+var DEMO_UPGRADE_URL = 'https://www.etsy.com/listing/4588625327/debt-payoff-planner-app-for-nurses'; /* Etsy listing for the full 10-debt version */
 var LS_KEY = FULL ? 'overtimeMoney.v1' : 'overtimeMoney.demo.v1';
 var MAX_DEBTS = FULL ? 10 : 3;
 
