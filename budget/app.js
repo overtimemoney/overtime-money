@@ -16,7 +16,7 @@ if (typeof document === 'undefined' || typeof window === 'undefined' || !window.
 
 var E = window.BudgetEngine;
 var FULL = window.BUDGET_FULL === true;
-var DEMO_UPGRADE_URL = '#'; /* TODO: replace with the Etsy listing URL for the full version */
+var DEMO_UPGRADE_URL = 'https://www.etsy.com/listing/4597841364'; /* Overtime Budget Etsy listing (live 2026-10-18) */
 var LS_KEY = FULL ? 'omBudget.v1' : 'omBudget.demo.v1';
 var CAP = E.capsFor(FULL);
 var DEBT_APP_URL = 'https://overtimemoney.github.io/overtime-money/';
